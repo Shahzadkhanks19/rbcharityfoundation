@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import HomePage from '../App'
 import SiteLayout from '../components/SiteLayout'
-import { AdminDashboardPage, AdminGuard, AdminLoginPage, AdminResourcePage } from '../pages/AdminPages'
+import { AdminDashboardPage, AdminForgotPasswordPage, AdminGuard, AdminLoginPage, AdminResetPasswordPage, AdminResourcePage } from '../pages/AdminPages'
 import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
 import CauseDetailsPage from '../pages/CauseDetailsPage'
@@ -10,8 +10,8 @@ import { GalleryPage, ImpactPage, ReportsPage, StoriesPage, StoryDetailsPage, Tr
 import DonatePage from '../pages/DonatePage'
 import { DonorAuthPage, DonorCampaignsPage, DonorDashboardPage, DonorDonationsPage, DonorProfilePage, DonorReceiptsPage } from '../pages/DonorPages'
 import EngagementFormPage from '../pages/EngagementFormPage'
-import ModulePage from '../pages/ModulePage'
 import { AboutPage, DonationSuccessPage, FAQPage, LegalPage } from '../pages/PublicInfoPages'
+import { ErrorPage, NotFoundPage } from '../pages/SystemPages'
 
 const withPublicLayout = element => <SiteLayout>{element}</SiteLayout>
 
@@ -40,6 +40,7 @@ export default function PlatformRouter() {
         <Route path="/privacy" element={withPublicLayout(<LegalPage type="privacy" />)} />
         <Route path="/terms" element={withPublicLayout(<LegalPage type="terms" />)} />
         <Route path="/refund-policy" element={withPublicLayout(<LegalPage type="refund" />)} />
+        <Route path="/error" element={withPublicLayout(<ErrorPage />)} />
 
         <Route path="/donor/login" element={<DonorAuthPage mode="login" />} />
         <Route path="/donor/register" element={<DonorAuthPage mode="register" />} />
@@ -50,6 +51,8 @@ export default function PlatformRouter() {
         <Route path="/donor/profile" element={<DonorProfilePage />} />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
+        <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
         <Route element={<AdminGuard />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           {['campaigns','causes','donations','donors','volunteers','partners','stories','messages','gallery','reports','content','settings','activity'].map(resource => (
@@ -57,7 +60,7 @@ export default function PlatformRouter() {
           ))}
         </Route>
 
-        <Route path="/404" element={withPublicLayout(<ModulePage title="Page Not Found" description="The page you requested could not be found." modules={['Return home','Browse causes','View campaigns','Contact support']} />)} />
+        <Route path="/404" element={withPublicLayout(<NotFoundPage />)} />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
     </BrowserRouter>
