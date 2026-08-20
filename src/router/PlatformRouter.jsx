@@ -5,6 +5,8 @@ import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
 import CauseDetailsPage from '../pages/CauseDetailsPage'
 import CausesPage from '../pages/CausesPage'
+import DonatePage from '../pages/DonatePage'
+import EngagementFormPage from '../pages/EngagementFormPage'
 import ModulePage from '../pages/ModulePage'
 import PortalPage from '../pages/PortalPage'
 
@@ -16,10 +18,6 @@ const publicRoutes = [
   ['/stories', 'Stories of Change', 'Stories, field updates and milestones from foundation initiatives.', ['Beneficiary stories', 'Campaign updates', 'Volunteer stories', 'Partner stories', 'Field notes']],
   ['/stories/:slug', 'Story Details', 'A complete story or field update from RB Charity Foundation.', ['Story', 'Media', 'Related cause', 'Related campaign', 'Share']],
   ['/gallery', 'Gallery', 'Photos and videos from verified foundation initiatives and events.', ['Photos', 'Videos', 'Campaign galleries', 'Events', 'Field work']],
-  ['/volunteer', 'Volunteer With Us', 'Register to contribute your time and skills to foundation initiatives.', ['Volunteer opportunities', 'Registration form', 'Availability', 'Skills', 'Volunteer guidelines']],
-  ['/partner', 'Partner With Us', 'Collaborate with RB Charity Foundation as a company, institution, NGO or community organisation.', ['Corporate partnerships', 'NGO partnerships', 'Institutional support', 'CSR collaboration', 'Partnership enquiry']],
-  ['/contact', 'Contact Us', 'Reach RB Charity Foundation for general, campaign, volunteer or partnership enquiries.', ['Contact form', 'General enquiries', 'Donation support', 'Volunteer support', 'Partnership support']],
-  ['/donate', 'Donate', 'Choose a cause, campaign or the general foundation fund and make a contribution.', ['Donation type', 'Cause or campaign', 'Amount', 'Donor details', 'Payment', 'Receipt']],
   ['/donate/success', 'Donation Successful', 'Confirmation page for completed contributions.', ['Donation confirmation', 'Receipt', 'Campaign summary', 'Donor dashboard link']],
   ['/faq', 'Frequently Asked Questions', 'Common questions about donations, campaigns, volunteering, transparency and the foundation.', ['Donations', 'Receipts', 'Campaigns', 'Volunteering', 'Partnerships', 'Transparency']],
   ['/privacy', 'Privacy Policy', 'How RB Charity Foundation handles personal information and website data.', ['Data collected', 'Purpose', 'Storage', 'Rights', 'Contact']],
@@ -68,43 +66,24 @@ export default function PlatformRouter() {
         <Route path="/causes/:slug" element={withPublicLayout(<CauseDetailsPage />)} />
         <Route path="/campaigns" element={withPublicLayout(<CampaignsPage />)} />
         <Route path="/campaigns/:slug" element={withPublicLayout(<CampaignDetailsPage />)} />
+        <Route path="/donate" element={withPublicLayout(<DonatePage />)} />
+        <Route path="/volunteer" element={withPublicLayout(<EngagementFormPage type="volunteer" />)} />
+        <Route path="/partner" element={withPublicLayout(<EngagementFormPage type="partner" />)} />
+        <Route path="/contact" element={withPublicLayout(<EngagementFormPage type="contact" />)} />
 
         {publicRoutes.map(([path, title, description, modules]) => (
-          <Route
-            key={path}
-            path={path}
-            element={withPublicLayout(
-              <ModulePage title={title} description={description} modules={modules} />,
-            )}
-          />
+          <Route key={path} path={path} element={withPublicLayout(<ModulePage title={title} description={description} modules={modules} />)} />
         ))}
 
         {donorRoutes.map(([path, title, description, modules]) => (
-          <Route
-            key={path}
-            path={path}
-            element={<PortalPage portal="Donor" title={title} description={description} modules={modules} />}
-          />
+          <Route key={path} path={path} element={<PortalPage portal="Donor" title={title} description={description} modules={modules} />} />
         ))}
 
         {adminRoutes.map(([path, title, description, modules]) => (
-          <Route
-            key={path}
-            path={path}
-            element={<PortalPage portal="Admin" title={title} description={description} modules={modules} />}
-          />
+          <Route key={path} path={path} element={<PortalPage portal="Admin" title={title} description={description} modules={modules} />} />
         ))}
 
-        <Route
-          path="/404"
-          element={withPublicLayout(
-            <ModulePage
-              title="Page Not Found"
-              description="The page you requested could not be found."
-              modules={['Return home', 'Browse causes', 'View campaigns', 'Contact support']}
-            />,
-          )}
-        />
+        <Route path="/404" element={withPublicLayout(<ModulePage title="Page Not Found" description="The page you requested could not be found." modules={['Return home', 'Browse causes', 'View campaigns', 'Contact support']} />)} />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
     </BrowserRouter>
