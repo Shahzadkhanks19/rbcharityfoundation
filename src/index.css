@@ -1,6 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-rb-50: #f0f8f5;
+  --color-rb-100: #dceee6;
+  --color-rb-500: #1f7a5b;
+  --color-rb-600: #17644a;
+  --color-rb-700: #124f3b;
+  --color-rb-800: #0d3b2e;
+  --color-rb-900: #08281f;
+  --color-gold: #d9a441;
+  --shadow-soft: 0 20px 60px rgba(8, 40, 31, 0.12);
+}
 
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
