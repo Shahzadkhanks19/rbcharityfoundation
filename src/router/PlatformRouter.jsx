@@ -1,14 +1,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import HomePage from '../App'
+import CampaignDetailsPage from '../pages/CampaignDetailsPage'
+import CampaignsPage from '../pages/CampaignsPage'
+import CauseDetailsPage from '../pages/CauseDetailsPage'
+import CausesPage from '../pages/CausesPage'
 import ModulePage from '../pages/ModulePage'
 import PortalPage from '../pages/PortalPage'
 
 const publicRoutes = [
   ['/about', 'About RB Charity Foundation', 'Learn about the foundation, its purpose, governance approach and the RB Group contribution model.', ['Our story', 'Mission & vision', 'How RB contributes', 'Governance', 'Values']],
-  ['/causes', 'Our Causes', 'Explore the social impact areas supported by RB Charity Foundation.', ['Hunger & food support', 'Education', 'Healthcare', 'Women empowerment', 'Emergency relief', 'Community development']],
-  ['/causes/:slug', 'Cause Details', 'Dedicated information for a foundation cause, its goals, campaigns and updates.', ['Cause overview', 'Active campaigns', 'Impact updates', 'Related stories', 'Donate to this cause']],
-  ['/campaigns', 'Campaigns', 'Browse verified fundraising and social impact campaigns.', ['Active campaigns', 'Completed campaigns', 'Urgent appeals', 'Campaign filters', 'Progress and updates']],
-  ['/campaigns/:slug', 'Campaign Details', 'Full campaign information with goals, progress, updates and donation options.', ['Campaign story', 'Funding goal', 'Allocation plan', 'Updates', 'Gallery', 'Donate']],
   ['/impact', 'Our Impact', 'A transparent overview of the work supported by the foundation.', ['Impact overview', 'Cause-wise outcomes', 'Field updates', 'Stories', 'Reports']],
   ['/transparency', 'Transparency', 'Track how contributions are received, allocated and documented.', ['Funds received', 'Funds allocated', 'Campaign reporting', 'Governance documents', 'Annual reports']],
   ['/reports', 'Reports & Documents', 'Public reports, policies, registrations and impact documents.', ['Annual reports', 'Impact reports', 'Policies', 'Registration documents', 'Download centre']],
@@ -59,6 +59,11 @@ export default function PlatformRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/causes" element={<CausesPage />} />
+        <Route path="/causes/:slug" element={<CauseDetailsPage />} />
+        <Route path="/campaigns" element={<CampaignsPage />} />
+        <Route path="/campaigns/:slug" element={<CampaignDetailsPage />} />
+
         {publicRoutes.map(([path, title, description, modules]) => (
           <Route key={path} path={path} element={<ModulePage title={title} description={description} modules={modules} />} />
         ))}
