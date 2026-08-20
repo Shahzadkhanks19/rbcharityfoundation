@@ -5,6 +5,14 @@ import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
 import CauseDetailsPage from '../pages/CauseDetailsPage'
 import CausesPage from '../pages/CausesPage'
+import {
+  GalleryPage,
+  ImpactPage,
+  ReportsPage,
+  StoriesPage,
+  StoryDetailsPage,
+  TransparencyPage,
+} from '../pages/ContentPages'
 import DonatePage from '../pages/DonatePage'
 import EngagementFormPage from '../pages/EngagementFormPage'
 import ModulePage from '../pages/ModulePage'
@@ -12,12 +20,6 @@ import PortalPage from '../pages/PortalPage'
 
 const publicRoutes = [
   ['/about', 'About RB Charity Foundation', 'Learn about the foundation, its purpose, governance approach and the RB Group contribution model.', ['Our story', 'Mission & vision', 'How RB contributes', 'Governance', 'Values']],
-  ['/impact', 'Our Impact', 'A transparent overview of the work supported by the foundation.', ['Impact overview', 'Cause-wise outcomes', 'Field updates', 'Stories', 'Reports']],
-  ['/transparency', 'Transparency', 'Track how contributions are received, allocated and documented.', ['Funds received', 'Funds allocated', 'Campaign reporting', 'Governance documents', 'Annual reports']],
-  ['/reports', 'Reports & Documents', 'Public reports, policies, registrations and impact documents.', ['Annual reports', 'Impact reports', 'Policies', 'Registration documents', 'Download centre']],
-  ['/stories', 'Stories of Change', 'Stories, field updates and milestones from foundation initiatives.', ['Beneficiary stories', 'Campaign updates', 'Volunteer stories', 'Partner stories', 'Field notes']],
-  ['/stories/:slug', 'Story Details', 'A complete story or field update from RB Charity Foundation.', ['Story', 'Media', 'Related cause', 'Related campaign', 'Share']],
-  ['/gallery', 'Gallery', 'Photos and videos from verified foundation initiatives and events.', ['Photos', 'Videos', 'Campaign galleries', 'Events', 'Field work']],
   ['/donate/success', 'Donation Successful', 'Confirmation page for completed contributions.', ['Donation confirmation', 'Receipt', 'Campaign summary', 'Donor dashboard link']],
   ['/faq', 'Frequently Asked Questions', 'Common questions about donations, campaigns, volunteering, transparency and the foundation.', ['Donations', 'Receipts', 'Campaigns', 'Volunteering', 'Partnerships', 'Transparency']],
   ['/privacy', 'Privacy Policy', 'How RB Charity Foundation handles personal information and website data.', ['Data collected', 'Purpose', 'Storage', 'Rights', 'Contact']],
@@ -70,6 +72,12 @@ export default function PlatformRouter() {
         <Route path="/volunteer" element={withPublicLayout(<EngagementFormPage type="volunteer" />)} />
         <Route path="/partner" element={withPublicLayout(<EngagementFormPage type="partner" />)} />
         <Route path="/contact" element={withPublicLayout(<EngagementFormPage type="contact" />)} />
+        <Route path="/impact" element={withPublicLayout(<ImpactPage />)} />
+        <Route path="/transparency" element={withPublicLayout(<TransparencyPage />)} />
+        <Route path="/reports" element={withPublicLayout(<ReportsPage />)} />
+        <Route path="/stories" element={withPublicLayout(<StoriesPage />)} />
+        <Route path="/stories/:slug" element={withPublicLayout(<StoryDetailsPage />)} />
+        <Route path="/gallery" element={withPublicLayout(<GalleryPage />)} />
 
         {publicRoutes.map(([path, title, description, modules]) => (
           <Route key={path} path={path} element={withPublicLayout(<ModulePage title={title} description={description} modules={modules} />)} />
