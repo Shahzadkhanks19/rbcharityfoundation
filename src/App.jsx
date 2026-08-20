@@ -1,7 +1,7 @@
 import { ArrowRight, CheckCircle2, Heart, HandHeart, Menu, ShieldCheck, Users, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import { FloatingActions } from './components/SiteLayout'
+import { FloatingActions, SiteFooter } from './components/SiteLayout'
 
 const LOGO_URL = 'https://media.githubusercontent.com/media/Shahzadkhanks19/rbserviceconnect/main/images/Charity-Logo-sample-1%20(1).png'
 
@@ -29,10 +29,9 @@ const eyebrow = 'inline-flex items-center gap-2 rounded-full border border-rb-10
 const sectionTitle = 'mt-4 max-w-3xl text-3xl font-black tracking-[-0.04em] text-rb-900 sm:text-4xl lg:text-5xl'
 const sectionCopy = 'mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg'
 const navLink = 'group relative rounded-full px-3 py-2 text-sm font-semibold text-rb-900/70 transition duration-300 hover:-translate-y-0.5 hover:bg-rb-50 hover:text-rb-900 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70'
-const footerLink = 'group flex w-fit items-center gap-2 rounded-lg px-2 py-1.5 -ml-2 transition duration-300 hover:translate-x-1 hover:bg-rb-50 hover:text-rb-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70'
 
-function BrandLogo({ footer = false }) {
-  return <img src={LOGO_URL} alt="RB Charity Foundation" className={footer ? 'h-24 w-auto max-w-[150px] object-contain object-left transition duration-500 hover:scale-105 sm:h-28 sm:max-w-[175px]' : 'h-16 w-auto max-w-[105px] object-contain transition duration-500 hover:-rotate-1 hover:scale-105 sm:h-[72px] sm:max-w-[120px]'} />
+function BrandLogo() {
+  return <img src={LOGO_URL} alt="RB Charity Foundation" className="h-16 w-auto max-w-[105px] object-contain transition duration-500 hover:-rotate-1 hover:scale-105 sm:h-[72px] sm:max-w-[120px]" />
 }
 
 function App() {
@@ -60,7 +59,7 @@ function App() {
       <section id="stories" className="py-24 sm:py-32"><div className={shell}><span className={eyebrow}>Stories of change</span><h2 className={sectionTitle}>The people behind every campaign matter more than the numbers.</h2><Link to="/stories" className="mt-6 inline-flex items-center gap-2 font-black text-rb-700">View stories <ArrowRight size={17}/></Link></div></section>
       <section id="volunteer" className="bg-[#fff1dd] py-24 sm:py-28"><div className={`${shell} grid gap-6 lg:grid-cols-3`}>{[[HandHeart,'Volunteer','Give your time and skills to field initiatives and community drives.','/volunteer'],[Users,'Partner','Collaborate as a company, institution, NGO or community partner.','/partner'],[Heart,'Donate','Support the general foundation fund or choose a specific verified campaign.','/donate']].map(([Icon,title,copy,path])=><Link to={path} key={title} className="group rounded-3xl p-6 transition hover:-translate-y-1 hover:bg-white/60 hover:shadow-lg"><Icon size={34} className="text-rb-700"/><h3 className="mt-5 text-3xl font-black text-rb-900">{title}</h3><p className="mt-3 leading-7 text-slate-700">{copy}</p></Link>)}</div></section>
 
-      <footer id="contact" className="border-t border-rb-100 bg-[#fffaf2] text-rb-900"><div className={`${shell} grid gap-12 py-16 lg:grid-cols-[1.1fr_.8fr_.9fr]`}><div><BrandLogo footer /><h2 className="mt-4 text-lg font-black">RB CHARITY FOUNDATION</h2><p className="mt-4 max-w-md leading-7 text-rb-900/60">Business-backed social impact with a transparent pathway for public participation.</p></div><div><p className="text-xs font-black uppercase tracking-[.18em] text-rb-900/55">Explore</p><div className="mt-5 space-y-1 text-rb-900/70"><Link className={footerLink} to="/">Home</Link><Link className={footerLink} to="/about">About</Link><Link className={footerLink} to="/causes">Causes</Link><Link className={footerLink} to="/campaigns">Campaigns</Link><Link className={footerLink} to="/impact">Impact</Link><Link className={footerLink} to="/stories">Stories</Link></div></div><div><p className="text-xs font-black uppercase tracking-[.18em] text-rb-900/55">Get involved</p><div className="mt-5 space-y-1 text-rb-900/70"><Link className={footerLink} to="/donate">Donate</Link><Link className={footerLink} to="/volunteer">Volunteer</Link><Link className={footerLink} to="/partner">Partner</Link><Link className={footerLink} to="/contact">Contact</Link></div></div></div><div className="border-t border-rb-100"><div className={`${shell} flex flex-col gap-4 py-7 pr-28 text-sm text-rb-900/50 sm:flex-row sm:items-center sm:justify-between sm:pr-36`}><span>© 2026 RB Charity Foundation. All rights reserved.</span><div className="flex flex-wrap gap-x-4 gap-y-2"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/refund-policy">Refund policy</Link></div></div></div></footer>
+      <SiteFooter />
       <FloatingActions />
     </main>
   )
