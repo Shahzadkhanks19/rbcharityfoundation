@@ -33,15 +33,18 @@ export function FloatingActions() {
       setShowTop(window.scrollY>500)
       const footer=document.getElementById('site-footer')
       if (!footer) return setOverFooter(false)
-      const rect=footer.getBoundingClientRect()
-      setOverFooter(rect.top < window.innerHeight - 24)
+      setOverFooter(footer.getBoundingClientRect().top < window.innerHeight - 24)
     }
     onScroll()
     window.addEventListener('scroll',onScroll,{passive:true})
     window.addEventListener('resize',onScroll)
     return()=>{window.removeEventListener('scroll',onScroll);window.removeEventListener('resize',onScroll)}
   },[])
-  return <div className={`fixed right-4 z-40 flex flex-col items-center gap-3 transition-all duration-300 sm:right-7 ${overFooter ? 'pointer-events-none translate-y-3 opacity-0' : 'bottom-5 opacity-100 sm:bottom-7'}`}>{showTop&&<button type="button" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} aria-label="Scroll to top" className="grid h-12 w-12 place-items-center rounded-full bg-rb-900 text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-rb-800"><ArrowUp size={20}/></button>}<Link to="/donate" aria-label="Donate now" className="group flex flex-col items-center gap-1.5 text-rb-900"><span className="grid h-12 w-12 place-items-center rounded-full bg-gold shadow-xl ring-2 ring-white/80 transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 group-hover:shadow-2xl"><Heart size={21} fill="currentColor" className="transition duration-300 group-hover:scale-110"/></span><span className="rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-black shadow-md backdrop-blur sm:text-[11px]">Donate now</span></Link></div>
+
+  return <>
+    {showTop&&<button type="button" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} aria-label="Scroll to top" className={`fixed bottom-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-rb-900 text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-rb-800 sm:bottom-7 ${overFooter ? 'left-4 sm:left-7' : 'right-4 sm:right-7'}`}><ArrowUp size={20}/></button>}
+    <Link to="/donate" aria-label="Donate now" className={`group fixed bottom-5 right-4 z-40 flex flex-col items-center gap-1.5 text-rb-900 transition duration-300 sm:bottom-7 sm:right-7 ${overFooter ? 'pointer-events-none translate-y-3 opacity-0' : 'opacity-100'}`}><span className="grid h-12 w-12 place-items-center rounded-full bg-gold shadow-xl ring-2 ring-white/80 transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 group-hover:shadow-2xl"><Heart size={21} fill="currentColor" className="transition duration-300 group-hover:scale-110"/></span><span className="rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-black shadow-md backdrop-blur sm:text-[11px]">Donate now</span></Link>
+  </>
 }
 
 export default function SiteLayout({ children }) {
