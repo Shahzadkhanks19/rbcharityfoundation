@@ -1,28 +1,39 @@
 # RB Charity Foundation
 
-Modern rebuild concept for RB Charity Foundation.
+A MERN-stack charity platform for RB Charity Foundation, built in the same technology family used during the original project period.
 
-## Direction
-- Social-impact arm of the RB Group
-- Funded partly through group profits and partly through public donations
-- Donation-first but transparency-led
-- Inspired by strong institutional charity storytelling and modern donor engagement, without copying any foundation
+## Stack
 
-## Current implementation
-- Responsive public homepage
-- Foundation mission / profit-to-purpose flow
-- Causes
-- Impact placeholders (intentionally no fake numbers)
-- Campaign template
-- Transparency framework
-- Stories
-- Donate / volunteer / partner pathways
-- Donation UI prototype with payments intentionally disabled pending verified legal/payment details
+- React 18
+- Vite
+- Tailwind CSS
+- Node.js
+- Express.js
+- MongoDB / Mongoose
 
-## Original legacy assets identified in rbserviceconnect
-- `charity.html`
-- `css/charity.css`
-- `images/Charity-Logo-sample-1 (1).png`
-- Multiple `DSC*.JPG` field/event photos
+## Local setup
 
-These legacy assets are Git LFS-backed in the old repository and were not retrievable in this environment. Replace the current visual placeholders with them if the LFS binaries become available.
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Frontend: `http://localhost:5173`  
+API: `http://localhost:5000`
+
+The Vite dev server proxies `/api` requests to the Express server.
+
+## Current V1
+
+- Responsive charity homepage
+- RB Group → Foundation → Impact positioning
+- Cause categories
+- Transparency section
+- Stories placeholders for verified future content
+- Volunteer / partner / donor pathways
+- Donation UI prototype
+- Express API foundation
+- MongoDB donation model and routes
+
+Payment collection is intentionally disabled until verified foundation banking, compliance and payment-gateway details are configured. No fake impact numbers or certifications are published.
