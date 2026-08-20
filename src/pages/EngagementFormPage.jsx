@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 const shell='mx-auto w-full max-w-5xl px-5 sm:px-6 lg:px-8'
 const input='w-full rounded-2xl border border-rb-100 bg-white px-4 py-3 text-rb-900 outline-none transition focus:border-rb-400 focus:ring-4 focus:ring-rb-100'
-const label='mb-2 block text-sm font-black text-rb-900'
+const labelClass='mb-2 block text-sm font-black text-rb-900'
 
 const configs={
   volunteer:{title:'Volunteer With Us',description:'Register your interest in contributing time and skills to RB Charity Foundation initiatives.',endpoint:'/api/volunteers',success:'Thank you. Your volunteer registration has been received.'},
@@ -40,4 +40,4 @@ export default function EngagementFormPage({type}){
   </form></div></main>
 }
 
-function Field({label,children,full=false}){return <label className={full?'md:col-span-2':''}><span className={label}>{label}</span>{children}</label>}
+function Field({label,children,full=false}){return <label className={full?'md:col-span-2':''}><span className={labelClass}>{label}</span>{children}</label>}
