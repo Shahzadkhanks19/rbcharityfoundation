@@ -1,27 +1,36 @@
 @import "tailwindcss";
 
-@theme {
-  --color-rb-50: #f0f8f5;
-  --color-rb-100: #dceee6;
-  --color-rb-500: #1f7a5b;
-  --color-rb-600: #17644a;
-  --color-rb-700: #124f3b;
-  --color-rb-800: #0d3b2e;
-  --color-rb-900: #08281f;
-  --color-gold: #d9a441;
-  --shadow-soft: 0 20px 60px rgba(8, 40, 31, 0.12);
-}
-
 :root {
+  --brand-primary: #b6325c;
+  --brand-primary-dark: #4b1328;
+  --brand-primary-mid: #8e2749;
+  --brand-primary-light: #fbeef3;
+  --brand-border: #f1cfdc;
+  --brand-accent: #f19a3e;
+  --brand-accent-soft: #fff0df;
+  --brand-page: #fffaf8;
+  --brand-ink: #32131f;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #17231f;
-  background: #fffdf8;
+  color: var(--brand-ink);
+  background: var(--brand-page);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
+@theme {
+  --color-rb-50: var(--brand-primary-light);
+  --color-rb-100: var(--brand-border);
+  --color-rb-500: var(--brand-primary);
+  --color-rb-600: var(--brand-primary-mid);
+  --color-rb-700: var(--brand-primary-mid);
+  --color-rb-800: var(--brand-primary-dark);
+  --color-rb-900: var(--brand-primary-dark);
+  --color-gold: var(--brand-accent);
+  --shadow-soft: 0 20px 60px color-mix(in srgb, var(--brand-primary-dark) 14%, transparent);
+}
+
 html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; background: #fffdf8; }
+body { margin: 0; min-width: 320px; background: var(--brand-page); }
 * { box-sizing: border-box; }
 button, a { -webkit-tap-highlight-color: transparent; }
 
@@ -39,4 +48,26 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .section-copy {
   @apply mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg;
+}
+
+/* Replace the temporary heart mark with the original RB Charity Foundation logo
+   stored in the legacy rbserviceconnect repository. */
+a[aria-label="RB Charity Foundation home"] {
+  width: 190px;
+  min-height: 58px;
+  background-image: url("https://media.githubusercontent.com/media/Shahzadkhanks19/rbserviceconnect/main/images/Charity-Logo-sample-1%20(1).png");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: contain;
+}
+
+a[aria-label="RB Charity Foundation home"] > * {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  a[aria-label="RB Charity Foundation home"] {
+    width: 150px;
+    min-height: 50px;
+  }
 }
