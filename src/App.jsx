@@ -24,8 +24,8 @@ function BrandLogo({ footer = false }) {
       src={LOGO_URL}
       alt="RB Charity Foundation"
       className={footer
-        ? 'h-24 w-auto max-w-[150px] object-contain object-left drop-shadow-[0_0_7px_rgba(255,255,255,0.72)] sm:h-28 sm:max-w-[175px]'
-        : 'h-16 w-auto max-w-[105px] object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.72)] transition duration-200 hover:scale-[1.03] sm:h-[72px] sm:max-w-[120px]'}
+        ? 'h-24 w-auto max-w-[150px] object-contain object-left sm:h-28 sm:max-w-[175px]'
+        : 'h-16 w-auto max-w-[105px] object-contain transition duration-200 hover:scale-[1.03] sm:h-[72px] sm:max-w-[120px]'}
     />
   )
 }
@@ -35,20 +35,20 @@ function App() {
 
   return (
     <main className="overflow-hidden bg-[#f8fbff] text-slate-900">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-rb-900/95 text-white backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-[#fffaf2]/95 text-rb-900 shadow-sm backdrop-blur-xl">
         <div className={`${shell} flex h-24 items-center justify-between gap-6`}>
           <a href="#home" className="flex shrink-0 items-center" aria-label="RB Charity Foundation home">
             <BrandLogo />
           </a>
 
           <nav className="hidden items-center gap-7 lg:flex">
-            {nav.map((item) => <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-semibold text-white/75 transition hover:text-white">{item}</a>)}
+            {nav.map((item) => <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-semibold text-rb-900/70 transition hover:text-rb-900">{item}</a>)}
           </nav>
 
-          <div className="hidden lg:block"><a href="#donate" className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-black text-rb-900 transition hover:-translate-y-0.5">Donate now <Heart size={16} /></a></div>
-          <button className="rounded-xl p-2 lg:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button>
+          <div className="hidden lg:block"><a href="#donate" className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-black text-rb-900 transition hover:-translate-y-0.5 hover:shadow-md">Donate now <Heart size={16} /></a></div>
+          <button className="rounded-xl p-2 text-rb-900 lg:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button>
         </div>
-        {open && <div className="border-t border-white/10 bg-rb-900 px-5 py-5 lg:hidden">{nav.map((item) => <a onClick={() => setOpen(false)} key={item} href={`#${item.toLowerCase()}`} className="block border-b border-white/10 py-3 font-semibold text-white/80">{item}</a>)}<a href="#donate" className="mt-4 inline-flex w-full justify-center rounded-full bg-gold px-5 py-3 font-black text-rb-900">Donate now</a></div>}
+        {open && <div className="border-t border-slate-200 bg-[#fffaf2] px-5 py-5 lg:hidden">{nav.map((item) => <a onClick={() => setOpen(false)} key={item} href={`#${item.toLowerCase()}`} className="block border-b border-slate-200 py-3 font-semibold text-rb-900/75">{item}</a>)}<a href="#donate" className="mt-4 inline-flex w-full justify-center rounded-full bg-gold px-5 py-3 font-black text-rb-900">Donate now</a></div>}
       </header>
 
       <section id="home" className="relative min-h-screen bg-rb-900 pt-24 text-white">
@@ -106,17 +106,17 @@ function App() {
 
       <section id="donate" className="py-24 sm:py-32"><div className={shell}><div className="grid overflow-hidden rounded-[2.5rem] bg-white shadow-soft lg:grid-cols-2"><div className="bg-rb-900 p-8 text-white sm:p-12"><span className="text-xs font-black uppercase tracking-[.2em] text-gold">Join the mission</span><h2 className="mt-5 text-4xl font-black tracking-[-.04em] sm:text-5xl">Your contribution can become someone else's opportunity.</h2><p className="mt-5 leading-8 text-white/70">The payment gateway will be connected only after the foundation's verified banking, legal and compliance details are available.</p></div><div className="p-8 sm:p-12"><p className="text-sm font-black uppercase tracking-[.18em] text-rb-600">Choose an amount</p><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{['₹500','₹1,000','₹2,500','Custom'].map(a=><button key={a} className="rounded-2xl border border-rb-100 px-4 py-4 font-black text-rb-900 transition hover:border-rb-600 hover:bg-rb-50">{a}</button>)}</div><button disabled className="mt-6 w-full cursor-not-allowed rounded-full bg-rb-800 px-6 py-4 font-black text-white opacity-60">Donation gateway coming soon</button><p className="mt-4 text-xs leading-5 text-slate-500">No payment will be collected until verified foundation details and gateway credentials are configured.</p></div></div></div></section>
 
-      <footer id="contact" className="bg-[#102a46] py-14 text-white">
+      <footer id="contact" className="border-t border-slate-200 bg-[#fffaf2] py-14 text-rb-900">
         <div className={`${shell} grid gap-10 md:grid-cols-3`}>
           <div>
             <BrandLogo footer />
             <p className="mt-3 font-black">RB CHARITY FOUNDATION</p>
-            <p className="mt-3 max-w-sm text-sm leading-6 text-white/55">Business-backed social impact with a transparent pathway for public participation.</p>
+            <p className="mt-3 max-w-sm text-sm leading-6 text-rb-900/60">Business-backed social impact with a transparent pathway for public participation.</p>
           </div>
-          <div><p className="text-sm font-black uppercase tracking-[.15em] text-white/50">Explore</p><div className="mt-4 space-y-2 text-sm text-white/70"><a className="block transition hover:text-gold" href="#about">About</a><a className="block transition hover:text-gold" href="#causes">Causes</a><a className="block transition hover:text-gold" href="#impact">Impact</a></div></div>
-          <div><p className="text-sm font-black uppercase tracking-[.15em] text-white/50">Get involved</p><div className="mt-4 space-y-2 text-sm text-white/70"><a className="block transition hover:text-gold" href="#donate">Donate</a><a className="block transition hover:text-gold" href="#volunteer">Volunteer</a><span className="block">Contact details to be verified</span></div></div>
+          <div><p className="text-sm font-black uppercase tracking-[.15em] text-rb-900/45">Explore</p><div className="mt-4 space-y-2 text-sm text-rb-900/70"><a className="block transition hover:text-gold" href="#about">About</a><a className="block transition hover:text-gold" href="#causes">Causes</a><a className="block transition hover:text-gold" href="#impact">Impact</a></div></div>
+          <div><p className="text-sm font-black uppercase tracking-[.15em] text-rb-900/45">Get involved</p><div className="mt-4 space-y-2 text-sm text-rb-900/70"><a className="block transition hover:text-gold" href="#donate">Donate</a><a className="block transition hover:text-gold" href="#volunteer">Volunteer</a><span className="block">Contact details to be verified</span></div></div>
         </div>
-        <div className={`${shell} mt-10 border-t border-white/10 pt-6 text-xs text-white/40`}>© {new Date().getFullYear()} RB Charity Foundation. All rights reserved.</div>
+        <div className={`${shell} mt-10 border-t border-slate-200 pt-6 text-xs text-rb-900/45`}>© {new Date().getFullYear()} RB Charity Foundation. All rights reserved.</div>
       </footer>
     </main>
   )
