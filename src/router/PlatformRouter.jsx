@@ -17,15 +17,7 @@ import DonatePage from '../pages/DonatePage'
 import EngagementFormPage from '../pages/EngagementFormPage'
 import ModulePage from '../pages/ModulePage'
 import PortalPage from '../pages/PortalPage'
-
-const publicRoutes = [
-  ['/about', 'About RB Charity Foundation', 'Learn about the foundation, its purpose, governance approach and the RB Group contribution model.', ['Our story', 'Mission & vision', 'How RB contributes', 'Governance', 'Values']],
-  ['/donate/success', 'Donation Successful', 'Confirmation page for completed contributions.', ['Donation confirmation', 'Receipt', 'Campaign summary', 'Donor dashboard link']],
-  ['/faq', 'Frequently Asked Questions', 'Common questions about donations, campaigns, volunteering, transparency and the foundation.', ['Donations', 'Receipts', 'Campaigns', 'Volunteering', 'Partnerships', 'Transparency']],
-  ['/privacy', 'Privacy Policy', 'How RB Charity Foundation handles personal information and website data.', ['Data collected', 'Purpose', 'Storage', 'Rights', 'Contact']],
-  ['/terms', 'Terms & Conditions', 'Terms governing the use of the RB Charity Foundation platform.', ['Website use', 'Donations', 'Campaigns', 'Accounts', 'Liability']],
-  ['/refund-policy', 'Donation Refund & Cancellation Policy', 'Policy for donation errors, duplicate payments and eligible refund requests.', ['Eligibility', 'Request process', 'Processing', 'Exceptions', 'Contact']],
-]
+import { AboutPage, DonationSuccessPage, FAQPage, LegalPage } from '../pages/PublicInfoPages'
 
 const donorRoutes = [
   ['/donor/login', 'Donor Login', 'Access your RB Charity Foundation donor account.', ['Email / mobile login', 'OTP or password', 'Forgot access']],
@@ -64,11 +56,13 @@ export default function PlatformRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={withPublicLayout(<AboutPage />)} />
         <Route path="/causes" element={withPublicLayout(<CausesPage />)} />
         <Route path="/causes/:slug" element={withPublicLayout(<CauseDetailsPage />)} />
         <Route path="/campaigns" element={withPublicLayout(<CampaignsPage />)} />
         <Route path="/campaigns/:slug" element={withPublicLayout(<CampaignDetailsPage />)} />
         <Route path="/donate" element={withPublicLayout(<DonatePage />)} />
+        <Route path="/donate/success" element={withPublicLayout(<DonationSuccessPage />)} />
         <Route path="/volunteer" element={withPublicLayout(<EngagementFormPage type="volunteer" />)} />
         <Route path="/partner" element={withPublicLayout(<EngagementFormPage type="partner" />)} />
         <Route path="/contact" element={withPublicLayout(<EngagementFormPage type="contact" />)} />
@@ -78,10 +72,10 @@ export default function PlatformRouter() {
         <Route path="/stories" element={withPublicLayout(<StoriesPage />)} />
         <Route path="/stories/:slug" element={withPublicLayout(<StoryDetailsPage />)} />
         <Route path="/gallery" element={withPublicLayout(<GalleryPage />)} />
-
-        {publicRoutes.map(([path, title, description, modules]) => (
-          <Route key={path} path={path} element={withPublicLayout(<ModulePage title={title} description={description} modules={modules} />)} />
-        ))}
+        <Route path="/faq" element={withPublicLayout(<FAQPage />)} />
+        <Route path="/privacy" element={withPublicLayout(<LegalPage type="privacy" />)} />
+        <Route path="/terms" element={withPublicLayout(<LegalPage type="terms" />)} />
+        <Route path="/refund-policy" element={withPublicLayout(<LegalPage type="refund" />)} />
 
         {donorRoutes.map(([path, title, description, modules]) => (
           <Route key={path} path={path} element={<PortalPage portal="Donor" title={title} description={description} modules={modules} />} />
