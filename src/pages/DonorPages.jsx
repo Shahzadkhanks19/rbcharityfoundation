@@ -1,6 +1,7 @@
 import { Heart, LogOut, ReceiptText, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { PageSkeleton } from '../components/system/SystemUI'
 
 const API='/api/donor'
 const field='w-full rounded-2xl border border-rb-100 bg-white px-4 py-3.5 outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10'
@@ -17,7 +18,7 @@ const nav=[['Dashboard','/donor/dashboard'],['My donations','/donor/donations'],
 function DonorShell({children}){const navigate=useNavigate(),loc=useLocation();const logout=()=>{localStorage.removeItem('rbDonorToken');navigate('/donor/login')};return <div className="min-h-screen bg-rb-50"><header className="border-b border-rb-100 bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5"><Link to="/" className="font-black text-rb-900">RB CHARITY FOUNDATION</Link><button onClick={logout} className="flex items-center gap-2 rounded-full bg-rb-50 px-4 py-2 text-sm font-black text-rb-800"><LogOut size={16}/> Logout</button></div></header><div className="mx-auto grid max-w-7xl gap-7 px-5 py-8 lg:grid-cols-[230px_1fr]"><aside className="h-fit rounded-3xl bg-rb-900 p-3 text-white">{nav.map(([label,path])=><Link key={path} to={path} className={`block rounded-2xl px-4 py-3 font-bold transition ${loc.pathname===path?'bg-gold text-rb-900':'text-white/70 hover:bg-white/10 hover:text-white'}`}>{label}</Link>)}</aside><main>{children}</main></div></div>}
 
 function useProtected(path){const [state,setState]=useState({loading:true,data:null,error:''});useEffect(()=>{if(!getToken()){setState({loading:false,data:null,error:'unauthorized'});return}request(path).then(data=>setState({loading:false,data,error:''})).catch(err=>{if(/session|log in/i.test(err.message))localStorage.removeItem('rbDonorToken');setState({loading:false,data:null,error:err.message})})},[path]);return state}
-const Loading=()=> <div className="rounded-3xl bg-white p-8 font-bold text-rb-900 shadow-sm">Loading your donor account…</div>
+const Loading=()=> <PageSkeleton cards={4}/>
 const Money=({value})=><>₹{Number(value||0).toLocaleString('en-IN')}</>
 
 export function DonorDashboardPage(){const s=useProtected('/dashboard');if(s.error==='unauthorized')return <Navigate to="/donor/login" replace/>;return <DonorShell>{s.loading?<Loading/>:<><h1 className="text-4xl font-black text-rb-900">Your impact dashboard</h1><div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[['Total contributed',<Money value={s.data.summary.totalContributed}/>],['Donation records',s.data.summary.totalDonations],['Completed donations',s.data.summary.paidDonations],['Campaigns supported',s.data.summary.campaignsSupported]].map(([a,b])=><div key={a} className="rounded-3xl bg-white p-6 shadow-sm"><p className="text-sm font-bold text-slate-500">{a}</p><p className="mt-2 text-3xl font-black text-rb-900">{b}</p></div>)}</div><DonationList items={s.data.recent} title="Recent donations"/></>}</DonorShell>}
