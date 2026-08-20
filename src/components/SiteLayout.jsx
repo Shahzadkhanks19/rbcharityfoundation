@@ -28,22 +28,34 @@ export function SiteFooter() {
 export function FloatingActions() {
   const [showTop,setShowTop]=useState(false)
   const [overFooter,setOverFooter]=useState(false)
+
   useEffect(()=>{
-    const onScroll=()=>{
-      setShowTop(window.scrollY>500)
-      const footer=document.getElementById('site-footer')
-      if (!footer) return setOverFooter(false)
-      setOverFooter(footer.getBoundingClientRect().top < window.innerHeight - 24)
+    const updateState=()=>{
+      setShowTop(window.scrollY>80)
+
+      const footer=document.getElementById('site-footer') || document.querySelector('footer')
+      if (!footer) {
+        setOverFooter(false)
+        return
+      }
+
+      const rect=footer.getBoundingClientRect()
+      setOverFooter(rect.top < window.innerHeight - 20 && rect.bottom > 0)
     }
-    onScroll()
-    window.addEventListener('scroll',onScroll,{passive:true})
-    window.addEventListener('resize',onScroll)
-    return()=>{window.removeEventListener('scroll',onScroll);window.removeEventListener('resize',onScroll)}
+
+    updateState()
+    window.addEventListener('scroll',updateState,{passive:true})
+    window.addEventListener('resize',updateState)
+    return()=>{
+      window.removeEventListener('scroll',updateState)
+      window.removeEventListener('resize',updateState)
+    }
   },[])
 
   return <>
-    {showTop&&<button type="button" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} aria-label="Scroll to top" className={`fixed bottom-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-rb-900 text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-rb-800 sm:bottom-7 ${overFooter ? 'left-4 sm:left-7' : 'right-4 sm:right-7'}`}><ArrowUp size={20}/></button>}
-    <Link to="/donate" aria-label="Donate now" className={`group fixed bottom-5 right-4 z-40 flex flex-col items-center gap-1.5 text-rb-900 transition duration-300 sm:bottom-7 sm:right-7 ${overFooter ? 'pointer-events-none translate-y-3 opacity-0' : 'opacity-100'}`}><span className="grid h-12 w-12 place-items-center rounded-full bg-gold shadow-xl ring-2 ring-white/80 transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 group-hover:shadow-2xl"><Heart size={21} fill="currentColor" className="transition duration-300 group-hover:scale-110"/></span><span className="rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-black shadow-md backdrop-blur sm:text-[11px]">Donate now</span></Link>
+    {showTop&&<button type="button" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} aria-label="Scroll to top" className={`fixed right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-rb-900 text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-rb-800 sm:right-7 ${overFooter ? 'bottom-24 sm:bottom-28' : 'bottom-5 sm:bottom-7'}`}><ArrowUp size={20}/></button>}
+
+    <Link to="/donate" aria-label="Donate now" className={`group fixed bottom-5 right-4 z-40 flex flex-col items-center gap-1.5 text-rb-900 transition-all duration-300 sm:bottom-7 sm:right-7 ${overFooter ? 'pointer-events-none translate-y-4 scale-95 opacity-0' : 'translate-y-0 scale-100 opacity-100'}`}><span className="grid h-12 w-12 place-items-center rounded-full bg-gold shadow-xl ring-2 ring-white/80 transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 group-hover:shadow-2xl"><Heart size={21} fill="currentColor" className="transition duration-300 group-hover:scale-110"/></span><span className="rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-black shadow-md backdrop-blur sm:text-[11px]">Donate now</span></Link>
   </>
 }
 
