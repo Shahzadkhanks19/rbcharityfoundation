@@ -2,6 +2,8 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 import mongoose from 'mongoose'
+import campaignRoutes from './routes/campaigns.js'
+import causeRoutes from './routes/causes.js'
 import donationRoutes from './routes/donations.js'
 
 dotenv.config()
@@ -16,6 +18,8 @@ app.get('/api/health', (_req, res) => {
   res.json({ success: true, service: 'RB Charity Foundation API' })
 })
 
+app.use('/api/causes', causeRoutes)
+app.use('/api/campaigns', campaignRoutes)
 app.use('/api/donations', donationRoutes)
 
 async function startServer() {
