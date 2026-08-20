@@ -51,25 +51,36 @@ main { background: var(--brand-page) !important; }
   @apply mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg;
 }
 
-/* Original RB Charity Foundation logo from the legacy repository. */
+/* Original RB Charity Foundation logo from the legacy repository.
+   Keep the logo directly on the branded navigation instead of putting it
+   inside a white card. Multiple drop shadows lift both the blue and orange
+   artwork away from the dark background without changing the original file. */
 a[aria-label="RB Charity Foundation home"] {
-  width: 156px;
-  min-height: 62px;
+  width: 128px;
+  min-height: 74px;
   flex-shrink: 0;
-  border-radius: 18px;
-  background-color: rgba(255, 255, 255, 0.96);
+  background-color: transparent;
   background-image: url("https://media.githubusercontent.com/media/Shahzadkhanks19/rbserviceconnect/main/images/Charity-Logo-sample-1%20(1).png");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: auto 54px;
-  box-shadow: 0 8px 28px rgba(15, 41, 68, 0.16);
+  background-size: 116px auto;
+  filter:
+    drop-shadow(0 0 5px rgba(255, 255, 255, 0.72))
+    drop-shadow(0 5px 10px rgba(7, 26, 50, 0.32));
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+a[aria-label="RB Charity Foundation home"]:hover {
+  transform: translateY(-1px);
+  filter:
+    drop-shadow(0 0 7px rgba(255, 255, 255, 0.88))
+    drop-shadow(0 7px 14px rgba(7, 26, 50, 0.38));
 }
 
 a[aria-label="RB Charity Foundation home"] > * {
   display: none;
 }
 
-/* Replace remaining one-off green/beige backgrounds with the logo palette. */
 #home > .absolute {
   background:
     radial-gradient(circle at 76% 18%, rgba(242, 162, 58, 0.28), transparent 30%),
@@ -84,19 +95,21 @@ footer#contact {
   background: #102a46 !important;
 }
 
+/* Footer brand mark: same original logo, no white tile. */
 footer#contact > .section-shell:first-child > div:first-child::before {
   content: "";
   display: block;
-  width: 172px;
-  height: 78px;
-  margin-bottom: 18px;
-  border-radius: 18px;
-  background-color: #ffffff;
+  width: 150px;
+  height: 92px;
+  margin-bottom: 14px;
+  background-color: transparent;
   background-image: url("https://media.githubusercontent.com/media/Shahzadkhanks19/rbserviceconnect/main/images/Charity-Logo-sample-1%20(1).png");
   background-repeat: no-repeat;
-  background-position: center;
-  background-size: auto 68px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  background-position: left center;
+  background-size: 128px auto;
+  filter:
+    drop-shadow(0 0 5px rgba(255, 255, 255, 0.72))
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.24));
 }
 
 footer#contact a:hover {
@@ -105,14 +118,14 @@ footer#contact a:hover {
 
 @media (max-width: 640px) {
   a[aria-label="RB Charity Foundation home"] {
-    width: 126px;
-    min-height: 54px;
-    background-size: auto 46px;
+    width: 104px;
+    min-height: 64px;
+    background-size: 94px auto;
   }
 
   footer#contact > .section-shell:first-child > div:first-child::before {
-    width: 150px;
-    height: 70px;
-    background-size: auto 60px;
+    width: 128px;
+    height: 80px;
+    background-size: 108px auto;
   }
 }
