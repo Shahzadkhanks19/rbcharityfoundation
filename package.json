@@ -13,6 +13,7 @@
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "predeploy": "npm run check && npm run audit:prod",
     "db:indexes": "node server/scripts/syncIndexes.js",
+    "cms:preview": "node server/scripts/importPreviewCmsContent.js",
     "preview": "vite preview",
     "start": "node server/index.js"
   },
