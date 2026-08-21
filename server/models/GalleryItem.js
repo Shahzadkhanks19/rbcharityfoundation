@@ -2,7 +2,9 @@ import mongoose from 'mongoose'
 
 const galleryItemSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
-  image: { type: String, required: true, trim: true },
+  mediaType: { type: String, enum: ['image', 'video'], default: 'image' },
+  mediaUrl: { type: String, trim: true, default: '' },
+  image: { type: String, trim: true, default: '' },
   category: { type: String, trim: true, default: 'general' },
   caption: { type: String, default: '' },
   status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft' },
