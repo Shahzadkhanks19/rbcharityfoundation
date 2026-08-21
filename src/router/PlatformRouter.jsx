@@ -5,6 +5,7 @@ import { AdminDashboardPage, AdminForgotPasswordPage, AdminGuard, AdminLoginPage
 import AdminCmsPage from '../pages/AdminCmsPages'
 import AdminDataPage from '../pages/AdminDataPages'
 import AdminEngagementPage from '../pages/AdminEngagementPage'
+import AdminReportsPage from '../pages/AdminReportsPage'
 import { AdminActivityPage, AdminSettingsPage } from '../pages/AdminSystemPages'
 import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
@@ -21,7 +22,7 @@ import { ErrorPage, NotFoundPage } from '../pages/SystemPages'
 
 const withPublicLayout = element => <SiteLayout>{element}</SiteLayout>
 const cmsResources = ['campaigns','causes','stories','gallery']
-const detailedDataResources = ['donations','donors','reports']
+const detailedDataResources = ['donations','donors']
 const engagementResources = ['volunteers','partners','messages']
 
 export default function PlatformRouter() {
@@ -59,6 +60,7 @@ export default function PlatformRouter() {
           {cmsResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminCmsPage resource={resource} />} />)}
           {detailedDataResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminDataPage resource={resource} />} />)}
           {engagementResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminEngagementPage resource={resource} />} />)}
+          <Route path="/admin/reports" element={<AdminReportsPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/activity" element={<AdminActivityPage />} />
         </Route>
