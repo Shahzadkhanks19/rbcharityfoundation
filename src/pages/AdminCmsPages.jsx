@@ -101,7 +101,7 @@ function Shell({ children }) {
 const configs = {
   campaigns: {
     title: 'Campaigns', primary: 'title', secondary: 'summary', statuses: ['draft', 'active', 'completed', 'paused', 'archived'],
-    fields: [['title', 'Campaign title'], ['slug', 'URL slug'], ['summary', 'Short summary', 'textarea'], ['description', 'Full description', 'textarea'], ['goalAmount', 'Funding goal'], ['coverImage', 'Cover image', 'mediaImage'], ['startsAt', 'Start date'], ['endsAt', 'End date'], ['featured', 'Featured campaign', 'boolean'], ['status', 'Status', 'status']]
+    fields: [['title', 'Campaign title'], ['slug', 'URL slug'], ['cause', 'Cause', 'cause'], ['summary', 'Short summary', 'textarea'], ['description', 'Full description', 'textarea'], ['goalAmount', 'Funding goal'], ['coverImage', 'Cover image', 'mediaImage'], ['startsAt', 'Start date'], ['endsAt', 'End date'], ['featured', 'Featured campaign', 'boolean'], ['status', 'Status', 'status']]
   },
   causes: {
     title: 'Causes', primary: 'name', secondary: 'summary', statuses: ['draft', 'published', 'archived'],
@@ -181,7 +181,7 @@ export default function AdminCmsPage({ resource }) {
                     {resource === 'gallery' && <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-rb-50 px-2.5 py-1 text-xs font-bold text-rb-700">{item.mediaType === 'video' ? <Video size={13} /> : <ImageIcon size={13} />} {item.mediaType || 'image'}</span>}
                   </div>
                   <p className="mt-1 line-clamp-2 break-words text-sm leading-6 text-slate-500">{item[config.secondary] || 'No description yet.'}</p>
-                  {resource === 'campaigns' && <p className="mt-2 text-sm font-bold text-rb-700">Goal: ₹{Number(item.goalAmount || 0).toLocaleString('en-IN')}</p>}
+                  {resource === 'campaigns' && <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold text-rb-700"><span>Goal: ₹{Number(item.goalAmount || 0).toLocaleString('en-IN')}</span><span>Cause: {item.cause?.name || 'Not linked'}</span></div>}
                 </div>
                 <CustomSelect value={item.status || config.statuses[0]} onChange={value => quickStatus(item, value)} options={config.statuses.map(value => ({ value, label: value }))} />
                 <div className="flex items-center gap-2">
@@ -207,6 +207,7 @@ export default function AdminCmsPage({ resource }) {
 
 function EditorModal({ resource, config, mode, item, onClose, onSaved }) {
   const initial = Object.fromEntries(config.fields.map(([key, , type]) => [key, type === 'boolean' ? Boolean(item[key]) : formatInitial(key, item[key])]))
+  if (resource === 'campaigns') initial.cause = item.cause?._id || item.cause || ''
   if (resource === 'gallery') {
     initial.mediaType = item.mediaType || 'image'
     initial.mediaUrl = item.mediaUrl || item.image || ''
@@ -214,9 +215,33 @@ function EditorModal({ resource, config, mode, item, onClose, onSaved }) {
 
   const [form, setForm] = useState(initial)
   const [state, setState] = useState({ busy: false, error: '' })
+  const [causeState, setCauseState] = useState({ loading: resource === 'campaigns', options: [], error: '' })
+
+  useEffect(() => {
+    if (resource !== 'campaigns') return undefined
+    let active = true
+    request('/causes')
+      .then(data => {
+        if (!active) return
+        const currentCauseId = item.cause?._id || item.cause || ''
+        const options = (data.items || [])
+          .filter(cause => cause.status === 'published' || String(cause._id) === String(currentCauseId))
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name))
+          .map(cause => ({ value: String(cause._id), label: `${cause.name}${cause.status !== 'published' ? ` (${cause.status})` : ''}` }))
+        setCauseState({ loading: false, options, error: '' })
+      })
+      .catch(error => {
+        if (active) setCauseState({ loading: false, options: [], error: error.message })
+      })
+    return () => { active = false }
+  }, [resource, item.cause])
 
   async function submit(event) {
     event.preventDefault()
+    if (resource === 'campaigns' && ['active', 'completed'].includes(form.status) && !form.cause) {
+      setState({ busy: false, error: 'Choose a cause before making this campaign active or completed.' })
+      return
+    }
     setState({ busy: true, error: '' })
     const payload = { ...form }
     ;['goalAmount', 'order'].forEach(key => { if (key in payload && payload[key] !== '') payload[key] = Number(payload[key]) })
@@ -251,10 +276,13 @@ function EditorModal({ resource, config, mode, item, onClose, onSaved }) {
               value={form[key]}
               statuses={config.statuses}
               mediaType={form.mediaType || 'image'}
+              causeOptions={causeState.options}
+              causeLoading={causeState.loading}
               onChange={value => setForm(current => ({ ...current, [key]: value }))}
             />
           ))}
 
+          {causeState.error && <p className="rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-800 sm:col-span-2">Unable to load causes: {causeState.error}</p>}
           {state.error && <p className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 sm:col-span-2">{state.error}</p>}
           <div className="flex flex-col-reverse gap-3 pt-2 sm:col-span-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={onClose} className="w-full rounded-full bg-rb-50 px-5 py-3 font-black sm:w-auto">Cancel</button>
@@ -266,11 +294,12 @@ function EditorModal({ resource, config, mode, item, onClose, onSaved }) {
   )
 }
 
-function Field({ fieldKey, label, type, value, statuses, mediaType, onChange }) {
+function Field({ fieldKey, label, type, value, statuses, mediaType, causeOptions = [], causeLoading = false, onChange }) {
   const wide = ['summary', 'description', 'content', 'caption', 'mediaUrl', 'coverImage', 'image'].includes(fieldKey)
 
   if (type === 'textarea') return <label className={`block min-w-0 ${wide ? 'sm:col-span-2' : ''}`}><span className="mb-2 block text-sm font-black">{label}</span><textarea className={textarea} value={value || ''} onChange={event => onChange(event.target.value)} /></label>
   if (type === 'status') return <label className="block min-w-0"><span className="mb-2 block text-sm font-black">{label}</span><CustomSelect value={value || statuses[0]} onChange={onChange} options={statuses.map(option => ({ value: option, label: option }))} /></label>
+  if (type === 'cause') return <label className="block min-w-0"><span className="mb-2 block text-sm font-black">{label}</span><CustomSelect value={value || ''} onChange={onChange} disabled={causeLoading} placeholder={causeLoading ? 'Loading causes…' : causeOptions.length ? 'Select a cause' : 'No published causes'} options={[{ value: '', label: 'No cause linked' }, ...causeOptions]} /></label>
   if (type === 'mediaType') return <label className="block min-w-0"><span className="mb-2 block text-sm font-black">{label}</span><CustomSelect value={value || 'image'} onChange={onChange} options={[{ value: 'image', label: 'Image' }, { value: 'video', label: 'Video' }]} /></label>
   if (type === 'boolean') return <label className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-rb-100 bg-rb-50 px-4 py-3.5"><span className="font-black">{label}</span><button type="button" onClick={() => onChange(!value)} className={`relative h-7 w-12 shrink-0 rounded-full transition ${value ? 'bg-rb-900' : 'bg-slate-300'}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${value ? 'left-6' : 'left-1'}`} /></button></label>
   if (type === 'mediaImage' || type === 'media') return <MediaField label={label} value={value} mediaType={type === 'mediaImage' ? 'image' : mediaType} onChange={onChange} />
