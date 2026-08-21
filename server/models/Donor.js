@@ -2,8 +2,8 @@ import mongoose from 'mongoose'
 
 const donorSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
-  email: { type: String, trim: true, lowercase: true, index: true, default: '' },
-  phone: { type: String, trim: true, index: true, default: '' },
+  email: { type: String, trim: true, lowercase: true, default: '' },
+  phone: { type: String, trim: true, default: '' },
   passwordHash: { type: String, default: '' },
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
