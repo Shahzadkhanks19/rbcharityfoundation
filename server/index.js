@@ -7,7 +7,6 @@ import campaignRoutes from './routes/campaigns.js'
 import causeRoutes from './routes/causes.js'
 import contactRoutes from './routes/contact.js'
 import donationRoutes from './routes/donations.js'
-import donorAuthRoutes from './routes/donorAuth.js'
 import partnerRoutes from './routes/partners.js'
 import publicContentRoutes from './routes/publicContent.js'
 import volunteerRoutes from './routes/volunteers.js'
@@ -23,7 +22,6 @@ app.use('/api/public', publicContentRoutes)
 app.use('/api/causes', causeRoutes)
 app.use('/api/campaigns', campaignRoutes)
 app.use('/api/donations', donationRoutes)
-app.use('/api/donor', donorAuthRoutes)
 app.use('/api/volunteers', volunteerRoutes)
 app.use('/api/partners', partnerRoutes)
 app.use('/api/contact', contactRoutes)
