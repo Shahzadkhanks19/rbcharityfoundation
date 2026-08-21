@@ -10,6 +10,7 @@
     "dev:server": "nodemon server/index.js",
     "build": "vite build",
     "check": "npm run build",
+    "db:indexes": "node server/scripts/syncIndexes.js",
     "preview": "vite preview",
     "start": "node server/index.js"
   },
