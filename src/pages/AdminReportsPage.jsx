@@ -4,14 +4,13 @@ import CustomSelect from '../components/form/CustomSelect'
 import AdminDataPage from './AdminDataPages'
 
 const API='/api/admin'
-const token=()=>sessionStorage.getItem('rbAdminToken')||''
 const input='w-full rounded-2xl border border-rb-100 bg-white px-4 py-3.5 outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10'
-async function request(path,options={}){const res=await fetch(`${API}${path}`,{...options,headers:{'Content-Type':'application/json',...(token()?{Authorization:`Bearer ${token()}`}:{})}});const data=await res.json();if(!res.ok)throw new Error(data.message||'Request failed');return data}
+async function request(path,options={}){const res=await fetch(`${API}${path}`,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',...(options.headers||{})}});const data=await res.json();if(!res.ok)throw new Error(data.message||'Request failed');return data}
 async function uploadReport(file){
   if(!file)return ''
   if(file.type!=='application/pdf')throw new Error('Please choose a PDF file.')
   if(file.size>25*1024*1024)throw new Error('Report PDF must be 25 MB or smaller.')
-  const signatureResponse=await fetch('/api/media/signature',{method:'POST',headers:{Authorization:`Bearer ${token()}`}})
+  const signatureResponse=await fetch('/api/admin/media/signature',{method:'POST',credentials:'same-origin'})
   const signatureData=await signatureResponse.json().catch(()=>({}))
   if(!signatureResponse.ok||!signatureData.success)throw new Error(signatureData.message||'Unable to prepare upload.')
   const formData=new FormData()
