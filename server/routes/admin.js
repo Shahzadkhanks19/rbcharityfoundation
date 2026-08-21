@@ -21,114 +21,21 @@ import { requireAdmin } from '../middleware/adminAuth.js'
 const router = express.Router()
 const models={causes:Cause,campaigns:Campaign,donations:Donation,donors:Donor,volunteers:Volunteer,partners:Partner,stories:Story,messages:ContactMessage,gallery:GalleryItem,reports:Report,content:SiteContent,settings:FoundationSetting,activity:ActivityLog}
 const creatable=['causes','campaigns','stories','gallery','reports','content','settings']
-const allowedStatuses={donations:['pending','paid','failed'],donors:['active','blocked','deleted'],volunteers:['new','reviewing','approved','assigned','inactive'],partners:['new','contacted','proposal','active','closed'],messages:['new','read','replied','archived'],causes:['draft','published','archived'],campaigns:['draft','active','completed','paused','archived'],stories:['draft','published','archived'],gallery:['draft','published','archived'],reports:['draft','published','archived']}
+const allowedStatuses={donors:['active','blocked','deleted'],volunteers:['new','reviewing','approved','assigned','inactive'],partners:['new','contacted','proposal','active','closed'],messages:['new','read','replied','archived'],causes:['draft','published','archived'],campaigns:['draft','active','completed','paused','archived'],stories:['draft','published','archived'],gallery:['draft','published','archived'],reports:['draft','published','archived']}
 const log=async(req,action,resource,id='',details='')=>{try{await ActivityLog.create({actor:req.admin?.email||'admin',action,resource,resourceId:String(id||''),details})}catch{}}
 const normalizeEmail=value=>String(value||'').trim().toLowerCase()
 const hashResetToken=token=>crypto.createHash('sha256').update(token).digest('hex')
-
-async function bootstrapAdmin(email,password){
-  const envEmail=normalizeEmail(process.env.ADMIN_EMAIL)
-  if(!envEmail||!process.env.ADMIN_PASSWORD||email!==envEmail||password!==process.env.ADMIN_PASSWORD)return null
-  return AdminAccount.findOneAndUpdate(
-    {email},
-    {$setOnInsert:{email,passwordHash:await bcrypt.hash(password,12),status:'active'}},
-    {new:true,upsert:true,setDefaultsOnInsert:true}
-  )
-}
-
-async function sendResetEmail(email,resetUrl){
-  if(!process.env.RESEND_API_KEY||!process.env.ADMIN_FROM_EMAIL)return false
-  const response=await fetch('https://api.resend.com/emails',{
-    method:'POST',
-    headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},
-    body:JSON.stringify({
-      from:process.env.ADMIN_FROM_EMAIL,
-      to:[email],
-      subject:'RB Charity Foundation admin password reset',
-      html:`<p>A password reset was requested for the RB Charity Foundation admin account.</p><p><a href="${resetUrl}">Reset admin password</a></p><p>This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>`
-    })
-  })
-  return response.ok
-}
-
-router.post('/login',async(req,res)=>{
-  const email=normalizeEmail(req.body.email),password=String(req.body.password||'')
-  const secret=process.env.JWT_SECRET
-  if(!secret)return res.status(503).json({success:false,message:'JWT_SECRET is not configured on the server.'})
-  let admin=await AdminAccount.findOne({email})
-  if(!admin)admin=await bootstrapAdmin(email,password)
-  if(!admin||admin.status!=='active'||!await bcrypt.compare(password,admin.passwordHash))return res.status(401).json({success:false,message:'Incorrect admin email or password.'})
-  admin.lastLoginAt=new Date();await admin.save()
-  const token=jwt.sign({role:'admin',sub:String(admin._id),email:admin.email},secret,{expiresIn:'8h'})
-  res.json({success:true,token,admin:{email:admin.email}})
-})
-
-router.post('/forgot-password',async(req,res)=>{
-  const email=normalizeEmail(req.body.email)
-  let admin=await AdminAccount.findOne({email})
-  if(!admin&&email===normalizeEmail(process.env.ADMIN_EMAIL)&&process.env.ADMIN_PASSWORD){
-    admin=await bootstrapAdmin(email,process.env.ADMIN_PASSWORD)
-  }
-  let resetUrl=''
-  if(admin&&admin.status==='active'){
-    const rawToken=crypto.randomBytes(32).toString('hex')
-    admin.resetTokenHash=hashResetToken(rawToken)
-    admin.resetTokenExpiresAt=new Date(Date.now()+30*60*1000)
-    await admin.save()
-    const clientUrl=(process.env.CLIENT_URL||'http://localhost:5173').replace(/\/$/,'')
-    resetUrl=`${clientUrl}/admin/reset-password?token=${encodeURIComponent(rawToken)}&email=${encodeURIComponent(admin.email)}`
-    try{await sendResetEmail(admin.email,resetUrl)}catch(error){console.error('Admin reset email failed:',error.message)}
-  }
-  const payload={success:true,message:'If that admin email exists, a password reset link has been prepared.'}
-  if(process.env.NODE_ENV!=='production'&&resetUrl)payload.devResetUrl=resetUrl
-  res.json(payload)
-})
-
-router.post('/reset-password',async(req,res)=>{
-  const email=normalizeEmail(req.body.email),token=String(req.body.token||''),password=String(req.body.password||'')
-  if(password.length<8)return res.status(400).json({success:false,message:'New password must be at least 8 characters.'})
-  const admin=await AdminAccount.findOne({email,resetTokenHash:hashResetToken(token),resetTokenExpiresAt:{$gt:new Date()},status:'active'})
-  if(!admin)return res.status(400).json({success:false,message:'This reset link is invalid or has expired.'})
-  admin.passwordHash=await bcrypt.hash(password,12)
-  admin.passwordChangedAt=new Date();admin.resetTokenHash='';admin.resetTokenExpiresAt=null
-  await admin.save()
-  try{await ActivityLog.create({actor:admin.email,action:'password-reset',resource:'admin-security',resourceId:String(admin._id),details:'Admin password reset completed.'})}catch{}
-  res.json({success:true,message:'Password reset successfully. You can now sign in.'})
-})
-
+async function bootstrapAdmin(email,password){const envEmail=normalizeEmail(process.env.ADMIN_EMAIL);if(!envEmail||!process.env.ADMIN_PASSWORD||email!==envEmail||password!==process.env.ADMIN_PASSWORD)return null;return AdminAccount.findOneAndUpdate({email},{$setOnInsert:{email,passwordHash:await bcrypt.hash(password,12),status:'active'}},{new:true,upsert:true,setDefaultsOnInsert:true})}
+async function sendResetEmail(email,resetUrl){if(!process.env.RESEND_API_KEY||!process.env.ADMIN_FROM_EMAIL)return false;const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:process.env.ADMIN_FROM_EMAIL,to:[email],subject:'RB Charity Foundation admin password reset',html:`<p>A password reset was requested for the RB Charity Foundation admin account.</p><p><a href="${resetUrl}">Reset admin password</a></p><p>This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>`})});return response.ok}
+router.post('/login',async(req,res)=>{const email=normalizeEmail(req.body.email),password=String(req.body.password||'');const secret=process.env.JWT_SECRET;if(!secret)return res.status(503).json({success:false,message:'JWT_SECRET is not configured on the server.'});let admin=await AdminAccount.findOne({email});if(!admin)admin=await bootstrapAdmin(email,password);if(!admin||admin.status!=='active'||!await bcrypt.compare(password,admin.passwordHash))return res.status(401).json({success:false,message:'Incorrect admin email or password.'});admin.lastLoginAt=new Date();await admin.save();const token=jwt.sign({role:'admin',sub:String(admin._id),email:admin.email},secret,{expiresIn:'8h'});res.json({success:true,token,admin:{email:admin.email}})})
+router.post('/forgot-password',async(req,res)=>{const email=normalizeEmail(req.body.email);let admin=await AdminAccount.findOne({email});if(!admin&&email===normalizeEmail(process.env.ADMIN_EMAIL)&&process.env.ADMIN_PASSWORD)admin=await bootstrapAdmin(email,process.env.ADMIN_PASSWORD);let resetUrl='';if(admin&&admin.status==='active'){const rawToken=crypto.randomBytes(32).toString('hex');admin.resetTokenHash=hashResetToken(rawToken);admin.resetTokenExpiresAt=new Date(Date.now()+30*60*1000);await admin.save();const clientUrl=(process.env.CLIENT_URL||'http://localhost:5173').replace(/\/$/,'');resetUrl=`${clientUrl}/admin/reset-password?token=${encodeURIComponent(rawToken)}&email=${encodeURIComponent(admin.email)}`;try{await sendResetEmail(admin.email,resetUrl)}catch(error){console.error('Admin reset email failed:',error.message)}}const payload={success:true,message:'If that admin email exists, a password reset link has been prepared.'};if(process.env.NODE_ENV!=='production'&&resetUrl)payload.devResetUrl=resetUrl;res.json(payload)})
+router.post('/reset-password',async(req,res)=>{const email=normalizeEmail(req.body.email),token=String(req.body.token||''),password=String(req.body.password||'');if(password.length<8)return res.status(400).json({success:false,message:'New password must be at least 8 characters.'});const admin=await AdminAccount.findOne({email,resetTokenHash:hashResetToken(token),resetTokenExpiresAt:{$gt:new Date()},status:'active'});if(!admin)return res.status(400).json({success:false,message:'This reset link is invalid or has expired.'});admin.passwordHash=await bcrypt.hash(password,12);admin.passwordChangedAt=new Date();admin.resetTokenHash='';admin.resetTokenExpiresAt=null;await admin.save();try{await ActivityLog.create({actor:admin.email,action:'password-reset',resource:'admin-security',resourceId:String(admin._id),details:'Admin password reset completed.'})}catch{}res.json({success:true,message:'Password reset successfully. You can now sign in.'})})
 router.use(requireAdmin)
 router.get('/me',(req,res)=>res.json({success:true,admin:{email:req.admin.email}}))
-router.post('/change-password',async(req,res)=>{
-  const currentPassword=String(req.body.currentPassword||''),newPassword=String(req.body.newPassword||'')
-  if(newPassword.length<8)return res.status(400).json({success:false,message:'New password must be at least 8 characters.'})
-  const admin=await AdminAccount.findById(req.admin.id)
-  if(!admin||!await bcrypt.compare(currentPassword,admin.passwordHash))return res.status(400).json({success:false,message:'Current password is incorrect.'})
-  if(await bcrypt.compare(newPassword,admin.passwordHash))return res.status(400).json({success:false,message:'Choose a password different from the current password.'})
-  admin.passwordHash=await bcrypt.hash(newPassword,12);admin.passwordChangedAt=new Date();await admin.save()
-  await log(req,'password-change','admin-security',admin._id,'Admin changed password from settings.')
-  res.json({success:true,message:'Password changed successfully.'})
-})
-router.get('/dashboard',async(_req,res)=>{
-  const [donations,donors,volunteers,partners,messages,campaigns,causes,stories]=await Promise.all([Donation.find().sort({createdAt:-1}).lean(),Donor.countDocuments(),Volunteer.countDocuments(),Partner.countDocuments(),ContactMessage.countDocuments(),Campaign.countDocuments(),Cause.countDocuments(),Story.countDocuments()])
-  const paid=donations.filter(x=>x.status==='paid')
-  res.json({success:true,summary:{totalRaised:paid.reduce((s,x)=>s+x.amount,0),donations:donations.length,donors,volunteers,partners,messages,campaigns,causes,stories},recentDonations:donations.slice(0,6)})
-})
-router.get('/:resource',async(req,res)=>{
-  const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'})
-  const items=await Model.find().sort({createdAt:-1}).limit(300).lean();res.json({success:true,items})
-})
-router.post('/:resource',async(req,res)=>{
-  const Model=models[req.params.resource];if(!Model||!creatable.includes(req.params.resource))return res.status(405).json({success:false,message:'Creation is not supported for this resource.'})
-  const item=await Model.create(req.body);await log(req,'create',req.params.resource,item._id);res.status(201).json({success:true,item})
-})
-router.patch('/:resource/:id',async(req,res)=>{
-  const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'})
-  const body={...req.body};if(body.status&&allowedStatuses[req.params.resource]&&!allowedStatuses[req.params.resource].includes(body.status))return res.status(400).json({success:false,message:'Invalid status.'});if(req.params.resource==='donors')delete body.passwordHash
-  const item=await Model.findByIdAndUpdate(req.params.id,body,{new:true,runValidators:true});if(!item)return res.status(404).json({success:false,message:'Record not found.'});await log(req,'update',req.params.resource,item._id);res.json({success:true,item})
-})
-router.delete('/:resource/:id',async(req,res)=>{
-  if(req.params.resource==='activity')return res.status(405).json({success:false,message:'Activity logs cannot be deleted from the admin UI.'})
-  const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});const item=await Model.findByIdAndDelete(req.params.id);if(!item)return res.status(404).json({success:false,message:'Record not found.'});await log(req,'delete',req.params.resource,req.params.id);res.json({success:true})
-})
-
+router.post('/change-password',async(req,res)=>{const currentPassword=String(req.body.currentPassword||''),newPassword=String(req.body.newPassword||'');if(newPassword.length<8)return res.status(400).json({success:false,message:'New password must be at least 8 characters.'});const admin=await AdminAccount.findById(req.admin.id);if(!admin||!await bcrypt.compare(currentPassword,admin.passwordHash))return res.status(400).json({success:false,message:'Current password is incorrect.'});if(await bcrypt.compare(newPassword,admin.passwordHash))return res.status(400).json({success:false,message:'Choose a password different from the current password.'});admin.passwordHash=await bcrypt.hash(newPassword,12);admin.passwordChangedAt=new Date();await admin.save();await log(req,'password-change','admin-security',admin._id,'Admin changed password from settings.');res.json({success:true,message:'Password changed successfully.'})})
+router.get('/dashboard',async(_req,res)=>{const [donations,donors,volunteers,partners,messages,campaigns,causes,stories]=await Promise.all([Donation.find().sort({createdAt:-1}).lean(),Donor.countDocuments(),Volunteer.countDocuments(),Partner.countDocuments(),ContactMessage.countDocuments(),Campaign.countDocuments(),Cause.countDocuments(),Story.countDocuments()]);const paid=donations.filter(x=>x.status==='paid');res.json({success:true,summary:{totalRaised:paid.reduce((s,x)=>s+x.amount,0),donations:donations.length,donors,volunteers,partners,messages,campaigns,causes,stories},recentDonations:donations.slice(0,6)})})
+router.get('/:resource',async(req,res)=>{const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});const items=await Model.find().sort({createdAt:-1}).limit(300).lean();res.json({success:true,items})})
+router.post('/:resource',async(req,res)=>{const Model=models[req.params.resource];if(!Model||!creatable.includes(req.params.resource))return res.status(405).json({success:false,message:'Creation is not supported for this resource.'});const item=await Model.create(req.body);await log(req,'create',req.params.resource,item._id);res.status(201).json({success:true,item})})
+router.patch('/:resource/:id',async(req,res)=>{const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});if(req.params.resource==='donations')return res.status(405).json({success:false,message:'Donation payment records are read-only. Payment status is controlled by verified gateway events.'});const body={...req.body};if(body.status&&allowedStatuses[req.params.resource]&&!allowedStatuses[req.params.resource].includes(body.status))return res.status(400).json({success:false,message:'Invalid status.'});if(req.params.resource==='donors'){delete body.totalDonated;delete body.donationCount;delete body.lastDonationAt}const item=await Model.findByIdAndUpdate(req.params.id,body,{new:true,runValidators:true});if(!item)return res.status(404).json({success:false,message:'Record not found.'});await log(req,'update',req.params.resource,item._id);res.json({success:true,item})})
+router.delete('/:resource/:id',async(req,res)=>{if(req.params.resource==='activity')return res.status(405).json({success:false,message:'Activity logs cannot be deleted from the admin UI.'});if(req.params.resource==='donations')return res.status(405).json({success:false,message:'Donation payment records cannot be deleted from the admin UI.'});const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});const item=await Model.findByIdAndDelete(req.params.id);if(!item)return res.status(404).json({success:false,message:'Record not found.'});await log(req,'delete',req.params.resource,req.params.id);res.json({success:true})})
 export default router
