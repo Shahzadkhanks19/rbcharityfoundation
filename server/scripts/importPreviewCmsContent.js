@@ -4,6 +4,7 @@ import { charityMedia } from '../../src/data/charityMedia.js'
 const baseUrl = String(process.env.CMS_BASE_URL || 'http://localhost:5000').replace(/\/$/, '')
 const email = String(process.env.ADMIN_EMAIL || '').trim()
 const password = String(process.env.ADMIN_PASSWORD || '')
+const mediaRoot = 'https://media.githubusercontent.com/media/Shahzadkhanks19/rbserviceconnect/main/images'
 
 if (!email || !password) {
   console.error('ADMIN_EMAIL and ADMIN_PASSWORD are required.')
@@ -87,6 +88,24 @@ const storyDrafts = [
   { title: 'Small Actions, Shared Responsibility', slug: 'small-actions-shared-responsibility', coverImage: charityMedia.campaigns[0], excerpt: 'Business-backed giving and public participation can work together to create a stronger culture of responsibility.', content: 'RB Charity Foundation connects the charitable commitment of the wider RB ecosystem with participation from individuals and partners. The model is simple: create clear ways to contribute, keep the process accountable and focus attention on useful, verified social initiatives.' },
 ]
 
+const galleryDrafts = [
+  { title: 'Community outreach in action', mediaType: 'image', mediaUrl: `${mediaRoot}/charity-1/DSC00012.JPG`, category: 'Community Outreach', caption: 'A field moment from community-focused charitable activity.', status: 'published', order: 1 },
+  { title: 'Supporting children and families', mediaType: 'image', mediaUrl: `${mediaRoot}/charity-1/DSC00057.JPG`, category: 'Education & Welfare', caption: 'Community support focused on dignity, participation and practical needs.', status: 'published', order: 2 },
+  { title: 'Together in the community', mediaType: 'image', mediaUrl: `${mediaRoot}/charity-1/DSC00171.JPG`, category: 'Community Outreach', caption: 'Volunteers and community members coming together around shared social responsibility.', status: 'published', order: 3 },
+  { title: 'Field activity documentation', mediaType: 'image', mediaUrl: `${mediaRoot}/charity-2/DSC00868.JPG`, category: 'Field Work', caption: 'Visual documentation from a charitable field activity.', status: 'published', order: 4 },
+  { title: 'Care delivered with dignity', mediaType: 'image', mediaUrl: `${mediaRoot}/charity-2/DSC00944.JPG`, category: 'Community Welfare', caption: 'A moment that reflects the foundation’s emphasis on respectful community support.', status: 'published', order: 5 },
+  { title: 'People behind the mission', mediaType: 'image', mediaUrl: `${mediaRoot}/charity-2/DSC00973.JPG`, category: 'Foundation Work', caption: 'The people and relationships behind meaningful charitable action.', status: 'published', order: 6 },
+  { title: 'RB community field video', mediaType: 'video', mediaUrl: `${mediaRoot}/C0045.MP4`, category: 'Video', caption: 'Sample field video sourced from the existing RB Service Connect charity media library.', status: 'published', order: 7 },
+  { title: 'Community support archive', mediaType: 'image', mediaUrl: `${mediaRoot}/charity-2/DSC00988.JPG`, category: 'Foundation Work', caption: 'Another documented moment from the existing charity media archive.', status: 'published', order: 8 },
+]
+
+const demoPdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+const reportDrafts = [
+  { title: 'Demo Impact Report 2026', type: 'Impact Report · Demo', year: 2026, fileUrl: demoPdfUrl, summary: 'Demo report record for testing the public Reports experience. Replace this placeholder PDF with the foundation’s verified impact report before production launch.', status: 'published' },
+  { title: 'Demo Annual Activity Report 2025', type: 'Annual Report · Demo', year: 2025, fileUrl: demoPdfUrl, summary: 'Sample annual activity report used only to validate CMS publishing, viewing and download behaviour. This is not an official statutory document.', status: 'published' },
+  { title: 'Demo Transparency & Governance Note', type: 'Transparency · Demo', year: 2026, fileUrl: demoPdfUrl, summary: 'Preview transparency document for UI testing. Replace with verified governance and transparency documentation before the public production release.', status: 'published' },
+]
+
 async function ensureResource(cookie, resource, items, key = 'slug') {
   const existing = await request(cookie, `/${resource}`)
   const byKey = new Map((existing.items || []).map(item => [String(item[key] || ''), item]))
@@ -114,7 +133,9 @@ async function main() {
   await ensureResource(cookie, 'campaigns', campaigns)
   const stories = storyDrafts.map(story => ({ ...story, publishedAt: new Date().toISOString(), status: 'published' }))
   await ensureResource(cookie, 'stories', stories)
-  console.log('Preview CMS content is ready. No frontend fallback or seed module was created.')
+  await ensureResource(cookie, 'gallery', galleryDrafts, 'title')
+  await ensureResource(cookie, 'reports', reportDrafts, 'title')
+  console.log('Preview CMS content is ready: causes, campaigns, stories, gallery media and demo reports. No frontend fallback or seed module was created.')
 }
 
 main().catch(error => {
