@@ -25,6 +25,52 @@ const allowedStatuses={donors:['active','blocked','deleted'],volunteers:['new','
 const log=async(req,action,resource,id='',details='')=>{try{await ActivityLog.create({actor:req.admin?.email||'admin',action,resource,resourceId:String(id||''),details})}catch{}}
 const normalizeEmail=value=>String(value||'').trim().toLowerCase()
 const hashResetToken=token=>crypto.createHash('sha256').update(token).digest('hex')
+
+function cmsMedia(item,resource){
+  if(!item)return null
+  if(resource==='campaigns')return {url:item.coverImage,resourceType:'image'}
+  if(resource==='causes')return {url:item.image,resourceType:'image'}
+  if(resource==='stories')return {url:item.coverImage,resourceType:'image'}
+  if(resource==='gallery')return {url:item.mediaUrl||item.image,resourceType:item.mediaType==='video'?'video':'image'}
+  return null
+}
+
+function cloudinaryAsset(url,resourceType='image'){
+  const cloudName=String(process.env.CLOUDINARY_CLOUD_NAME||'').trim()
+  if(!cloudName||!url)return null
+  try{
+    const parsed=new URL(String(url))
+    if(parsed.hostname!=='res.cloudinary.com')return null
+    const parts=parsed.pathname.split('/').filter(Boolean)
+    if(parts[0]!==cloudName)return null
+    const uploadIndex=parts.indexOf('upload')
+    if(uploadIndex<0)return null
+    let assetParts=parts.slice(uploadIndex+1)
+    if(assetParts[0]&&/^v\d+$/.test(assetParts[0]))assetParts=assetParts.slice(1)
+    if(!assetParts.length||assetParts[0]!=='rb-charity-foundation')return null
+    const last=assetParts.at(-1).replace(/\.[^.]+$/,'')
+    assetParts[assetParts.length-1]=last
+    return {publicId:assetParts.join('/'),resourceType}
+  }catch{return null}
+}
+
+async function destroyCloudinaryAsset(media){
+  if(!media?.url)return
+  const apiKey=String(process.env.CLOUDINARY_API_KEY||'').trim()
+  const apiSecret=String(process.env.CLOUDINARY_API_SECRET||'').trim()
+  const cloudName=String(process.env.CLOUDINARY_CLOUD_NAME||'').trim()
+  if(!apiKey||!apiSecret||!cloudName)return
+  const asset=cloudinaryAsset(media.url,media.resourceType)
+  if(!asset)return
+  const timestamp=Math.floor(Date.now()/1000)
+  const signature=crypto.createHash('sha1').update(`public_id=${asset.publicId}&timestamp=${timestamp}${apiSecret}`).digest('hex')
+  const form=new URLSearchParams({public_id:asset.publicId,timestamp:String(timestamp),api_key:apiKey,signature})
+  try{
+    const response=await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${asset.resourceType}/destroy`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form})
+    if(!response.ok){const body=await response.text();console.error('Cloudinary cleanup failed:',body)}
+  }catch(error){console.error('Cloudinary cleanup failed:',error.message)}
+}
+
 async function bootstrapAdmin(email,password){const envEmail=normalizeEmail(process.env.ADMIN_EMAIL);if(!envEmail||!process.env.ADMIN_PASSWORD||email!==envEmail||password!==process.env.ADMIN_PASSWORD)return null;return AdminAccount.findOneAndUpdate({email},{$setOnInsert:{email,passwordHash:await bcrypt.hash(password,12),status:'active'}},{new:true,upsert:true,setDefaultsOnInsert:true})}
 async function sendResetEmail(email,resetUrl){if(!process.env.RESEND_API_KEY||!process.env.ADMIN_FROM_EMAIL)return false;const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:process.env.ADMIN_FROM_EMAIL,to:[email],subject:'RB Charity Foundation admin password reset',html:`<p>A password reset was requested for the RB Charity Foundation admin account.</p><p><a href="${resetUrl}">Reset admin password</a></p><p>This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>`})});return response.ok}
 router.post('/login',async(req,res)=>{const email=normalizeEmail(req.body.email),password=String(req.body.password||'');const secret=process.env.JWT_SECRET;if(!secret)return res.status(503).json({success:false,message:'JWT_SECRET is not configured on the server.'});let admin=await AdminAccount.findOne({email});if(!admin)admin=await bootstrapAdmin(email,password);if(!admin||admin.status!=='active'||!await bcrypt.compare(password,admin.passwordHash))return res.status(401).json({success:false,message:'Incorrect admin email or password.'});admin.lastLoginAt=new Date();await admin.save();const token=jwt.sign({role:'admin',sub:String(admin._id),email:admin.email},secret,{expiresIn:'8h'});res.json({success:true,token,admin:{email:admin.email}})})
@@ -36,6 +82,6 @@ router.post('/change-password',async(req,res)=>{const currentPassword=String(req
 router.get('/dashboard',async(_req,res)=>{const [donations,donors,volunteers,partners,messages,campaigns,causes,stories]=await Promise.all([Donation.find().sort({createdAt:-1}).lean(),Donor.countDocuments(),Volunteer.countDocuments(),Partner.countDocuments(),ContactMessage.countDocuments(),Campaign.countDocuments(),Cause.countDocuments(),Story.countDocuments()]);const paid=donations.filter(x=>x.status==='paid');res.json({success:true,summary:{totalRaised:paid.reduce((s,x)=>s+x.amount,0),donations:donations.length,donors,volunteers,partners,messages,campaigns,causes,stories},recentDonations:donations.slice(0,6)})})
 router.get('/:resource',async(req,res)=>{const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});const items=await Model.find().sort({createdAt:-1}).limit(300).lean();res.json({success:true,items})})
 router.post('/:resource',async(req,res)=>{const Model=models[req.params.resource];if(!Model||!creatable.includes(req.params.resource))return res.status(405).json({success:false,message:'Creation is not supported for this resource.'});const item=await Model.create(req.body);await log(req,'create',req.params.resource,item._id);res.status(201).json({success:true,item})})
-router.patch('/:resource/:id',async(req,res)=>{const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});if(req.params.resource==='donations')return res.status(405).json({success:false,message:'Donation payment records are read-only. Payment status is controlled by verified gateway events.'});const body={...req.body};if(body.status&&allowedStatuses[req.params.resource]&&!allowedStatuses[req.params.resource].includes(body.status))return res.status(400).json({success:false,message:'Invalid status.'});if(req.params.resource==='donors'){delete body.totalDonated;delete body.donationCount;delete body.lastDonationAt}const item=await Model.findByIdAndUpdate(req.params.id,body,{new:true,runValidators:true});if(!item)return res.status(404).json({success:false,message:'Record not found.'});await log(req,'update',req.params.resource,item._id);res.json({success:true,item})})
-router.delete('/:resource/:id',async(req,res)=>{if(req.params.resource==='activity')return res.status(405).json({success:false,message:'Activity logs cannot be deleted from the admin UI.'});if(req.params.resource==='donations')return res.status(405).json({success:false,message:'Donation payment records cannot be deleted from the admin UI.'});const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});const item=await Model.findByIdAndDelete(req.params.id);if(!item)return res.status(404).json({success:false,message:'Record not found.'});await log(req,'delete',req.params.resource,req.params.id);res.json({success:true})})
+router.patch('/:resource/:id',async(req,res)=>{const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});if(req.params.resource==='donations')return res.status(405).json({success:false,message:'Donation payment records are read-only. Payment status is controlled by verified gateway events.'});const body={...req.body};if(body.status&&allowedStatuses[req.params.resource]&&!allowedStatuses[req.params.resource].includes(body.status))return res.status(400).json({success:false,message:'Invalid status.'});if(req.params.resource==='donors'){delete body.totalDonated;delete body.donationCount;delete body.lastDonationAt}const previous=await Model.findById(req.params.id).lean();if(!previous)return res.status(404).json({success:false,message:'Record not found.'});const oldMedia=cmsMedia(previous,req.params.resource);const item=await Model.findByIdAndUpdate(req.params.id,body,{new:true,runValidators:true});const newMedia=cmsMedia(item,req.params.resource);if(oldMedia?.url&&oldMedia.url!==newMedia?.url)void destroyCloudinaryAsset(oldMedia);await log(req,'update',req.params.resource,item._id);res.json({success:true,item})})
+router.delete('/:resource/:id',async(req,res)=>{if(req.params.resource==='activity')return res.status(405).json({success:false,message:'Activity logs cannot be deleted from the admin UI.'});if(req.params.resource==='donations')return res.status(405).json({success:false,message:'Donation payment records cannot be deleted from the admin UI.'});const Model=models[req.params.resource];if(!Model)return res.status(404).json({success:false,message:'Unknown admin resource.'});const item=await Model.findByIdAndDelete(req.params.id);if(!item)return res.status(404).json({success:false,message:'Record not found.'});const media=cmsMedia(item,req.params.resource);if(media?.url)void destroyCloudinaryAsset(media);await log(req,'delete',req.params.resource,req.params.id);res.json({success:true})})
 export default router
