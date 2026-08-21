@@ -15,4 +15,7 @@ const campaignSchema = new mongoose.Schema({
   featured: { type: Boolean, default: false }
 }, { timestamps: true })
 
+campaignSchema.index({ status: 1, featured: -1, startsAt: -1 })
+campaignSchema.index({ cause: 1, status: 1 })
+
 export default mongoose.models.Campaign || mongoose.model('Campaign', campaignSchema)
