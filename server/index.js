@@ -10,12 +10,14 @@ import donationRoutes from './routes/donations.js'
 import mediaRoutes from './routes/media.js'
 import partnerRoutes from './routes/partners.js'
 import publicContentRoutes from './routes/publicContent.js'
+import razorpayWebhookRoutes from './routes/razorpayWebhook.js'
 import volunteerRoutes from './routes/volunteers.js'
 
 dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5000
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
+app.use('/api/donations/webhook', razorpayWebhookRoutes)
 app.use(express.json({ limit: '1mb' }))
 app.get('/api/health', (_req, res) => res.json({ success: true, service: 'RB Charity Foundation API' }))
 app.use('/api/admin/media', mediaRoutes)
