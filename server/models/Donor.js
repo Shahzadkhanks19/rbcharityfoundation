@@ -4,20 +4,13 @@ const donorSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, trim: true, lowercase: true, default: '' },
   phone: { type: String, trim: true, default: '' },
-  passwordHash: { type: String, default: '' },
-  resetTokenHash: { type: String, default: '' },
-  resetTokenExpiresAt: { type: Date, default: null },
-  passwordChangedAt: { type: Date, default: null },
-  emailVerified: { type: Boolean, default: false },
-  phoneVerified: { type: Boolean, default: false },
   status: { type: String, enum: ['active', 'blocked', 'deleted'], default: 'active' },
-  preferences: {
-    campaignUpdates: { type: Boolean, default: true },
-    foundationUpdates: { type: Boolean, default: true }
-  }
+  totalDonated: { type: Number, min: 0, default: 0 },
+  donationCount: { type: Number, min: 0, default: 0 },
+  lastDonationAt: { type: Date, default: null }
 }, { timestamps: true })
 
 donorSchema.index({ email: 1 }, { unique: true, sparse: true })
-donorSchema.index({ phone: 1 }, { unique: true, sparse: true })
+donorSchema.index({ phone: 1 }, { sparse: true })
 
 export default mongoose.models.Donor || mongoose.model('Donor', donorSchema)
