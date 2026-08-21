@@ -1,18 +1,9 @@
 import { ArrowRight, CheckCircle2, Heart, HandHeart, Menu, ShieldCheck, Users, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FloatingActions, SiteFooter } from './components/SiteLayout'
 
 const LOGO_URL = 'https://media.githubusercontent.com/media/Shahzadkhanks19/rbserviceconnect/main/images/Charity-Logo-sample-1%20(1).png'
-
-const causes = [
-  ['Hunger & Food Support', 'Nutritious meals and essential food support for vulnerable communities.'],
-  ['Education', 'Learning support, school resources and opportunities for children and young people.'],
-  ['Healthcare', 'Medical assistance and healthcare support for people who need it most.'],
-  ['Women Empowerment', 'Helping women access skills, opportunities and pathways to greater independence.'],
-  ['Emergency Relief', 'Rapid support for families and communities during urgent situations.'],
-  ['Community Development', 'Long-term initiatives focused on dignity, opportunity and stronger communities.']
-]
 
 const nav = [
   ['Home', '/'],
@@ -36,6 +27,22 @@ function BrandLogo() {
 
 function App() {
   const [open, setOpen] = useState(false)
+  const [causeState, setCauseState] = useState({ loading: true, items: [], error: false })
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/causes')
+      .then(async response => {
+        const data = await response.json()
+        if (!response.ok || !data.success) throw new Error(data.message || 'Unable to load causes')
+        if (active) setCauseState({ loading: false, items: (data.data || []).slice(0, 6), error: false })
+      })
+      .catch(() => {
+        if (active) setCauseState({ loading: false, items: [], error: true })
+      })
+    return () => { active = false }
+  }, [])
+
   return (
     <main className="overflow-hidden bg-[#f8fbff] text-slate-900">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-[#fffaf2]/95 text-rb-900 shadow-sm backdrop-blur-xl">
@@ -52,7 +59,7 @@ function App() {
 
       <section id="about" className="py-24 sm:py-32"><div className={`${shell} grid gap-14 lg:grid-cols-2 lg:items-center`}><div><span className={eyebrow}>Our foundation</span><h2 className={sectionTitle}>A charitable arm built around responsibility, dignity and action.</h2><p className={sectionCopy}>RB Charity Foundation exists to convert commercial growth into positive social outcomes. Alongside contributions connected to RB businesses, the platform gives individuals and partners a clear way to support causes they believe in.</p><Link to="/about" className="mt-6 inline-flex items-center gap-2 font-black text-rb-700">Learn about us <ArrowRight size={17}/></Link></div><div className="grid gap-4 sm:grid-cols-2">{[['Business-backed giving','A sustainable model that connects business performance with community responsibility.'],['Public participation','Supporters can contribute directly to the foundation or to specific campaigns.'],['Transparent impact','Campaign updates and reporting are designed to show where support goes.'],['Long-term thinking','We focus on meaningful, repeatable initiatives rather than one-time visibility.']].map(([title,copy])=><article key={title} className="group rounded-3xl border border-rb-100 bg-white p-6 shadow-soft transition hover:-translate-y-1.5 hover:border-gold/35 hover:shadow-xl"><CheckCircle2 className="text-rb-600"/><h3 className="mt-5 text-xl font-black text-rb-900">{title}</h3><p className="mt-3 leading-7 text-slate-600">{copy}</p></article>)}</div></div></section>
 
-      <section id="causes" className="bg-rb-50 py-24 sm:py-32"><div className={shell}><span className={eyebrow}>Our causes</span><h2 className={sectionTitle}>Focused areas where support can create lasting change.</h2><p className={sectionCopy}>These categories form the foundation of the platform. Real campaigns and verified impact figures will be published as they are approved.</p><div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{causes.map(([title,copy],i)=><article key={title} className="group rounded-[2rem] border border-rb-100 bg-white p-7 transition hover:-translate-y-2 hover:border-gold/35 hover:shadow-xl"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-rb-800 font-black text-white">0{i+1}</div><h3 className="mt-6 text-2xl font-black text-rb-900">{title}</h3><p className="mt-3 leading-7 text-slate-600">{copy}</p></article>)}</div><Link to="/causes" className="mt-8 inline-flex items-center gap-2 rounded-full bg-rb-900 px-5 py-3 font-black text-white">View all causes <ArrowRight size={17}/></Link></div></section>
+      <section id="causes" className="bg-rb-50 py-24 sm:py-32"><div className={shell}><span className={eyebrow}>Our causes</span><h2 className={sectionTitle}>Focused areas where support can create lasting change.</h2><p className={sectionCopy}>Published focus areas from the foundation appear here automatically.</p>{causeState.loading?<div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{Array.from({length:6}).map((_,i)=><div key={i} className="h-56 animate-pulse rounded-[2rem] border border-rb-100 bg-white"/>)}</div>:causeState.items.length?<div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{causeState.items.map((cause,i)=><Link to={`/causes/${cause.slug}`} key={cause._id||cause.slug} className="group rounded-[2rem] border border-rb-100 bg-white p-7 transition hover:-translate-y-2 hover:border-gold/35 hover:shadow-xl"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-rb-800 font-black text-white">{String(i+1).padStart(2,'0')}</div><h3 className="mt-6 text-2xl font-black text-rb-900">{cause.name}</h3><p className="mt-3 leading-7 text-slate-600">{cause.summary||cause.description||'Learn more about this foundation cause.'}</p></Link>)}</div>:<div className="mt-12 rounded-[2rem] border border-dashed border-rb-200 bg-white p-8 text-center"><h3 className="text-xl font-black text-rb-900">{causeState.error?'Unable to load causes':'No published causes yet'}</h3><p className="mt-2 text-slate-600">{causeState.error?'Please try again once the API is available.':'Published causes from Admin will appear here automatically.'}</p></div>}<Link to="/causes" className="mt-8 inline-flex items-center gap-2 rounded-full bg-rb-900 px-5 py-3 font-black text-white">View all causes <ArrowRight size={17}/></Link></div></section>
 
       <section id="impact" className="py-24 sm:py-32"><div className={shell}><div className="rounded-[2.5rem] bg-rb-900 p-7 text-white shadow-xl sm:p-10 lg:p-14"><div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:items-center"><div><span className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-[.18em] text-gold">Transparency first</span><h2 className="mt-5 text-4xl font-black tracking-[-.04em] sm:text-5xl">Every contribution should have a story you can follow.</h2><p className="mt-5 leading-8 text-white/70">The platform is designed around traceable campaigns, updates, reports and real impact data rather than decorative numbers.</p><Link to="/impact" className="mt-6 inline-flex items-center gap-2 font-black text-gold">Explore impact <ArrowRight size={17}/></Link></div><div className="grid gap-4 sm:grid-cols-2">{[['Funds received','Donation and group contribution records'],['Funds allocated','Cause and campaign allocation'],['Work completed','Field updates and project status'],['Impact documented','Stories, media and reports']].map(([title,copy])=><div key={title} className="group rounded-3xl border border-white/10 bg-white/10 p-6 transition hover:-translate-y-1 hover:bg-white/[.14]"><ShieldCheck className="text-gold"/><h3 className="mt-4 text-xl font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-white/65">{copy}</p></div>)}</div></div></div></div></section>
 
