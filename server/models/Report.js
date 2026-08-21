@@ -9,4 +9,6 @@ const reportSchema = new mongoose.Schema({
   status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft' }
 }, { timestamps: true })
 
+reportSchema.index({ status: 1, year: -1 })
+
 export default mongoose.models.Report || mongoose.model('Report', reportSchema)
