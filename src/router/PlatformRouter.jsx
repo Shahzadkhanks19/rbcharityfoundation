@@ -11,7 +11,6 @@ import CauseDetailsPage from '../pages/CauseDetailsPage'
 import CausesPage from '../pages/CausesPage'
 import { ImpactPage, TransparencyPage } from '../pages/ContentPages'
 import DonatePage from '../pages/DonatePage'
-import { DonorAuthPage, DonorCampaignsPage, DonorDashboardPage, DonorDonationsPage, DonorForgotPasswordPage, DonorProfilePage, DonorReceiptsPage, DonorResetPasswordPage } from '../pages/DonorPages'
 import { DynamicGalleryPage, DynamicReportsPage } from '../pages/DynamicPublicPages'
 import { DynamicStoriesPage, DynamicStoryDetailsPage } from '../pages/DynamicStoryPages'
 import EngagementFormPage from '../pages/EngagementFormPage'
@@ -48,16 +47,6 @@ export default function PlatformRouter() {
         <Route path="/terms" element={withPublicLayout(<LegalPage type="terms" />)} />
         <Route path="/refund-policy" element={withPublicLayout(<LegalPage type="refund" />)} />
         <Route path="/error" element={withPublicLayout(<ErrorPage />)} />
-
-        <Route path="/donor/login" element={<DonorAuthPage mode="login" />} />
-        <Route path="/donor/register" element={<DonorAuthPage mode="register" />} />
-        <Route path="/donor/forgot-password" element={<DonorForgotPasswordPage />} />
-        <Route path="/donor/reset-password" element={<DonorResetPasswordPage />} />
-        <Route path="/donor/dashboard" element={<DonorDashboardPage />} />
-        <Route path="/donor/donations" element={<DonorDonationsPage />} />
-        <Route path="/donor/receipts" element={<DonorReceiptsPage />} />
-        <Route path="/donor/campaigns" element={<DonorCampaignsPage />} />
-        <Route path="/donor/profile" element={<DonorProfilePage />} />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
