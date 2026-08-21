@@ -7,6 +7,7 @@ import campaignRoutes from './routes/campaigns.js'
 import causeRoutes from './routes/causes.js'
 import contactRoutes from './routes/contact.js'
 import donationRoutes from './routes/donations.js'
+import mediaRoutes from './routes/media.js'
 import partnerRoutes from './routes/partners.js'
 import publicContentRoutes from './routes/publicContent.js'
 import volunteerRoutes from './routes/volunteers.js'
@@ -17,6 +18,7 @@ const PORT = process.env.PORT || 5000
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
 app.use(express.json({ limit: '1mb' }))
 app.get('/api/health', (_req, res) => res.json({ success: true, service: 'RB Charity Foundation API' }))
+app.use('/api/admin/media', mediaRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/public', publicContentRoutes)
 app.use('/api/causes', causeRoutes)
