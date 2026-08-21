@@ -27,7 +27,6 @@ async function resolveDestination(destination, causeSlug, campaignSlug) {
 }
 
 async function syncDonor(donation) {
-  if (donation.status !== 'paid') return
   await Donor.findOneAndUpdate(
     { email: donation.email },
     {
@@ -39,7 +38,7 @@ async function syncDonor(donation) {
 }
 
 async function syncCampaign(donation) {
-  if (donation.status === 'paid' && donation.destination === 'campaign' && donation.campaignSlug) {
+  if (donation.destination === 'campaign' && donation.campaignSlug) {
     await Campaign.updateOne({ slug: donation.campaignSlug }, { $inc: { raisedAmount: donation.amount } })
   }
 }
@@ -97,15 +96,49 @@ router.post('/verify', async (req, res) => {
   const orderId = String(req.body.razorpay_order_id || '')
   const paymentId = String(req.body.razorpay_payment_id || '')
   const signature = String(req.body.razorpay_signature || '')
-  const donation = await Donation.findOne({ _id: donationId, orderId })
-  if (!donation) return res.status(404).json({ success: false, message: 'Donation record not found.' })
-  if (donation.status === 'paid') return res.json({ success: true, donationId: donation._id, paymentId: donation.paymentId, amount: donation.amount, destination: donation.cause })
+
+  const existing = await Donation.findOne({ _id: donationId, orderId })
+  if (!existing) return res.status(404).json({ success: false, message: 'Donation record not found.' })
+  if (existing.status === 'paid') return res.json({ success: true, donationId: existing._id, paymentId: existing.paymentId, amount: existing.amount, destination: existing.cause })
+
   const expected = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || '').update(`${orderId}|${paymentId}`).digest('hex')
-  if (!signature || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature.padEnd(expected.length).slice(0, expected.length)))) {
-    donation.status = 'failed'; donation.failureReason = 'Payment signature verification failed.'; await donation.save()
+  const provided = signature.padEnd(expected.length).slice(0, expected.length)
+  if (!signature || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(provided))) {
+    await Donation.updateOne(
+      { _id: donationId, orderId, status: { $ne: 'paid' } },
+      { $set: { status: 'failed', failureReason: 'Payment signature verification failed.' } }
+    )
     return res.status(400).json({ success: false, message: 'Payment verification failed.' })
   }
-  donation.status = 'paid'; donation.paymentId = paymentId; donation.paymentSignature = signature; donation.paidAt = new Date(); donation.failureReason = ''; await donation.save()
+
+  let donation
+  try {
+    donation = await Donation.findOneAndUpdate(
+      { _id: donationId, orderId, status: { $ne: 'paid' } },
+      {
+        $set: {
+          status: 'paid',
+          paymentId,
+          paymentSignature: signature,
+          paidAt: new Date(),
+          failureReason: ''
+        }
+      },
+      { new: true, runValidators: true }
+    )
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ success: false, message: 'This payment reference is already linked to another donation.' })
+    }
+    throw error
+  }
+
+  if (!donation) {
+    const settled = await Donation.findOne({ _id: donationId, orderId })
+    if (settled?.status === 'paid') return res.json({ success: true, donationId: settled._id, paymentId: settled.paymentId, amount: settled.amount, destination: settled.cause })
+    return res.status(409).json({ success: false, message: 'Donation state changed while payment was being verified. Please check the payment status before retrying.' })
+  }
+
   await Promise.all([syncDonor(donation), syncCampaign(donation)])
   try { await sendReceipt(donation) } catch (error) { console.error('Donation acknowledgement email failed:', error.message) }
   res.json({ success: true, donationId: donation._id, paymentId, amount: donation.amount, destination: donation.cause })
