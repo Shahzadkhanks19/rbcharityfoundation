@@ -6,6 +6,8 @@ import helmet from 'helmet'
 import mongoose from 'mongoose'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { adminBodyPolicy } from './middleware/adminBodyPolicy.js'
+import { adminSessionMiddleware } from './middleware/adminSession.js'
 import adminRoutes from './routes/admin.js'
 import campaignRoutes from './routes/campaigns.js'
 import causeRoutes from './routes/causes.js'
@@ -25,6 +27,9 @@ const isProduction = process.env.NODE_ENV === 'production'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const distPath = path.resolve(__dirname, '../dist')
+
+// Production deployments sync indexes explicitly with `npm run db:indexes`.
+mongoose.set('autoIndex', !isProduction)
 
 const requiredProductionEnv = [
   'MONGODB_URI',
@@ -69,6 +74,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
     return callback(new Error('Origin is not allowed by CORS.'))
   },
+  credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature'],
   maxAge: 86400,
@@ -109,7 +115,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/admin/media', mediaRoutes)
-app.use('/api/admin', adminRoutes)
+app.use('/api/admin', adminSessionMiddleware, adminBodyPolicy, adminRoutes)
 app.use('/api/public', publicContentRoutes)
 app.use('/api/causes', causeRoutes)
 app.use('/api/campaigns', campaignRoutes)
