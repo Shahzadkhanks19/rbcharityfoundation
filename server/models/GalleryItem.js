@@ -11,4 +11,6 @@ const galleryItemSchema = new mongoose.Schema({
   order: { type: Number, default: 0 }
 }, { timestamps: true })
 
+galleryItemSchema.index({ status: 1, order: 1 })
+
 export default mongoose.models.GalleryItem || mongoose.model('GalleryItem', galleryItemSchema)
