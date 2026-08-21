@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { transparencySteps } from '../data/contentSeed'
+import { transparencySteps } from '../data/transparencyContent'
 import usePublicContent, { cmsValue } from '../hooks/usePublicContent'
 
 const shell='mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8'
