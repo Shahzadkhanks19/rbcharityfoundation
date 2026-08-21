@@ -6,10 +6,11 @@ import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
 import CauseDetailsPage from '../pages/CauseDetailsPage'
 import CausesPage from '../pages/CausesPage'
-import { ImpactPage, StoriesPage, StoryDetailsPage, TransparencyPage } from '../pages/ContentPages'
+import { ImpactPage, TransparencyPage } from '../pages/ContentPages'
 import DonatePage from '../pages/DonatePage'
 import { DonorAuthPage, DonorCampaignsPage, DonorDashboardPage, DonorDonationsPage, DonorProfilePage, DonorReceiptsPage } from '../pages/DonorPages'
 import { DynamicGalleryPage, DynamicReportsPage } from '../pages/DynamicPublicPages'
+import { DynamicStoriesPage, DynamicStoryDetailsPage } from '../pages/DynamicStoryPages'
 import EngagementFormPage from '../pages/EngagementFormPage'
 import { AboutPage, DonationSuccessPage, FAQPage, LegalPage } from '../pages/PublicInfoPages'
 import { ErrorPage, NotFoundPage } from '../pages/SystemPages'
@@ -34,8 +35,8 @@ export default function PlatformRouter() {
         <Route path="/impact" element={withPublicLayout(<ImpactPage />)} />
         <Route path="/transparency" element={withPublicLayout(<TransparencyPage />)} />
         <Route path="/reports" element={withPublicLayout(<DynamicReportsPage />)} />
-        <Route path="/stories" element={withPublicLayout(<StoriesPage />)} />
-        <Route path="/stories/:slug" element={withPublicLayout(<StoryDetailsPage />)} />
+        <Route path="/stories" element={withPublicLayout(<DynamicStoriesPage />)} />
+        <Route path="/stories/:slug" element={withPublicLayout(<DynamicStoryDetailsPage />)} />
         <Route path="/gallery" element={withPublicLayout(<DynamicGalleryPage />)} />
         <Route path="/faq" element={withPublicLayout(<FAQPage />)} />
         <Route path="/privacy" element={withPublicLayout(<LegalPage type="privacy" />)} />
