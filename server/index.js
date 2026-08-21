@@ -1,7 +1,11 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
+import rateLimit from 'express-rate-limit'
+import helmet from 'helmet'
 import mongoose from 'mongoose'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import adminRoutes from './routes/admin.js'
 import campaignRoutes from './routes/campaigns.js'
 import causeRoutes from './routes/causes.js'
@@ -14,12 +18,96 @@ import razorpayWebhookRoutes from './routes/razorpayWebhook.js'
 import volunteerRoutes from './routes/volunteers.js'
 
 dotenv.config()
+
 const app = express()
-const PORT = process.env.PORT || 5000
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
+const PORT = Number(process.env.PORT || 5000)
+const isProduction = process.env.NODE_ENV === 'production'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const distPath = path.resolve(__dirname, '../dist')
+
+const requiredProductionEnv = [
+  'MONGODB_URI',
+  'JWT_SECRET',
+  'ADMIN_EMAIL',
+  'ADMIN_PASSWORD',
+  'RAZORPAY_KEY_ID',
+  'RAZORPAY_KEY_SECRET',
+  'RAZORPAY_WEBHOOK_SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
+]
+
+if (isProduction) {
+  const missing = requiredProductionEnv.filter((name) => !String(process.env[name] || '').trim())
+  if (missing.length) {
+    console.error(`Missing required production environment variables: ${missing.join(', ')}`)
+    process.exit(1)
+  }
+  if (String(process.env.JWT_SECRET).length < 32) {
+    console.error('JWT_SECRET must be at least 32 characters in production.')
+    process.exit(1)
+  }
+}
+
+app.disable('x-powered-by')
+if (isProduction) app.set('trust proxy', 1)
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}))
+
+const allowedOrigins = String(process.env.CLIENT_URL || (isProduction ? '' : 'http://localhost:5173'))
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
+    return callback(new Error('Origin is not allowed by CORS.'))
+  },
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature'],
+  maxAge: 86400,
+}))
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please try again shortly.' },
+})
+const adminAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many authentication attempts. Please try again later.' },
+})
+
+app.use('/api', apiLimiter)
+app.use('/api/admin/login', adminAuthLimiter)
+app.use('/api/admin/forgot-password', adminAuthLimiter)
+app.use('/api/admin/reset-password', adminAuthLimiter)
+
+// Razorpay signature verification requires the untouched raw body, so mount this before express.json().
 app.use('/api/donations/webhook', razorpayWebhookRoutes)
 app.use(express.json({ limit: '1mb' }))
-app.get('/api/health', (_req, res) => res.json({ success: true, service: 'RB Charity Foundation API' }))
+
+app.get('/api/health', (_req, res) => {
+  const dbReady = mongoose.connection.readyState === 1
+  res.status(dbReady ? 200 : 503).json({
+    success: dbReady,
+    service: 'RB Charity Foundation API',
+    database: dbReady ? 'connected' : 'unavailable',
+    uptimeSeconds: Math.round(process.uptime()),
+  })
+})
+
 app.use('/api/admin/media', mediaRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/public', publicContentRoutes)
@@ -29,10 +117,66 @@ app.use('/api/donations', donationRoutes)
 app.use('/api/volunteers', volunteerRoutes)
 app.use('/api/partners', partnerRoutes)
 app.use('/api/contact', contactRoutes)
-app.use((error, _req, res, _next) => { console.error(error); res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' }) })
-async function startServer() {
-  if (process.env.MONGODB_URI) { try { await mongoose.connect(process.env.MONGODB_URI); console.log('MongoDB connected') } catch (error) { console.error('MongoDB connection failed:', error.message) } }
-  else console.warn('MONGODB_URI is not configured. API is running without a database connection.')
-  app.listen(PORT, () => console.log(`RB Charity API running on port ${PORT}`))
+
+app.use('/api', (_req, res) => res.status(404).json({ success: false, message: 'API route not found.' }))
+
+if (isProduction) {
+  app.use(express.static(distPath, {
+    index: false,
+    maxAge: '1y',
+    immutable: true,
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache')
+    },
+  }))
+  app.get('*splat', (_req, res) => res.sendFile(path.join(distPath, 'index.html')))
 }
-startServer()
+
+app.use((error, _req, res, _next) => {
+  console.error(error)
+  if (res.headersSent) return
+  res.status(error?.message === 'Origin is not allowed by CORS.' ? 403 : 500).json({
+    success: false,
+    message: error?.message === 'Origin is not allowed by CORS.'
+      ? 'Request origin is not allowed.'
+      : 'Something went wrong. Please try again.',
+  })
+})
+
+let server
+async function startServer() {
+  if (!process.env.MONGODB_URI) {
+    if (isProduction) throw new Error('MONGODB_URI is required in production.')
+    console.warn('MONGODB_URI is not configured. API is running without a database connection.')
+  } else {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+    })
+    console.log('MongoDB connected')
+  }
+
+  server = app.listen(PORT, () => console.log(`RB Charity API running on port ${PORT}`))
+}
+
+async function shutdown(signal) {
+  console.log(`${signal} received. Shutting down gracefully...`)
+  if (server) await new Promise((resolve) => server.close(resolve))
+  if (mongoose.connection.readyState !== 0) await mongoose.connection.close()
+  process.exit(0)
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'))
+process.on('SIGINT', () => void shutdown('SIGINT'))
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled promise rejection:', error)
+  if (isProduction) process.exit(1)
+})
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error)
+  process.exit(1)
+})
+
+startServer().catch((error) => {
+  console.error('Server startup failed:', error.message)
+  process.exit(1)
+})
