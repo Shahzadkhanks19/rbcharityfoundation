@@ -1,4 +1,4 @@
-import { FileText, Plus, Save, Trash2, X } from 'lucide-react'
+import { Plus, Save, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import CustomSelect from '../components/form/CustomSelect'
 import AdminDataPage from './AdminDataPages'
