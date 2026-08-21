@@ -6,8 +6,7 @@ import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
 import CauseDetailsPage from '../pages/CauseDetailsPage'
 import CausesPage from '../pages/CausesPage'
-import CmsImpactPage from '../pages/CmsImpactPage'
-import { TransparencyPage } from '../pages/ContentPages'
+import { ImpactPage, TransparencyPage } from '../pages/ContentPages'
 import DonatePage from '../pages/DonatePage'
 import { DonorAuthPage, DonorCampaignsPage, DonorDashboardPage, DonorDonationsPage, DonorProfilePage, DonorReceiptsPage } from '../pages/DonorPages'
 import { DynamicGalleryPage, DynamicReportsPage } from '../pages/DynamicPublicPages'
@@ -33,7 +32,7 @@ export default function PlatformRouter() {
         <Route path="/volunteer" element={withPublicLayout(<EngagementFormPage type="volunteer" />)} />
         <Route path="/partner" element={withPublicLayout(<EngagementFormPage type="partner" />)} />
         <Route path="/contact" element={withPublicLayout(<EngagementFormPage type="contact" />)} />
-        <Route path="/impact" element={withPublicLayout(<CmsImpactPage />)} />
+        <Route path="/impact" element={withPublicLayout(<ImpactPage />)} />
         <Route path="/transparency" element={withPublicLayout(<TransparencyPage />)} />
         <Route path="/reports" element={withPublicLayout(<DynamicReportsPage />)} />
         <Route path="/stories" element={withPublicLayout(<DynamicStoriesPage />)} />
@@ -58,7 +57,7 @@ export default function PlatformRouter() {
         <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
         <Route element={<AdminGuard />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          {['campaigns','causes','donations','donors','volunteers','partners','stories','messages','gallery','reports','content','settings','activity'].map(resource => (
+          {['campaigns','causes','donations','donors','volunteers','partners','stories','messages','gallery','reports','settings','activity'].map(resource => (
             <Route key={resource} path={`/admin/${resource}`} element={<AdminResourcePage resource={resource} />} />
           ))}
         </Route>
