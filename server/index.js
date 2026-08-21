@@ -81,6 +81,8 @@ const allowedOrigins = String(process.env.CLIENT_URL || (isProduction ? '' : 'ht
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean)
+const vercelOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
+if (vercelOrigin && !allowedOrigins.includes(vercelOrigin)) allowedOrigins.push(vercelOrigin)
 
 app.use(cors({
   origin(origin, callback) {
