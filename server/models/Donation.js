@@ -10,10 +10,18 @@ const donationSchema = new mongoose.Schema(
     cause: { type: String, default: 'General Fund' },
     causeSlug: { type: String, trim: true, default: '' },
     campaignSlug: { type: String, trim: true, default: '' },
-    paymentId: { type: String, default: null },
+    paymentProvider: { type: String, default: 'razorpay' },
+    orderId: { type: String, trim: true, default: '' },
+    paymentId: { type: String, trim: true, default: '' },
+    paymentSignature: { type: String, default: '' },
+    failureReason: { type: String, default: '' },
+    paidAt: { type: Date, default: null },
     status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' }
   },
   { timestamps: true }
 )
+
+donationSchema.index({ orderId: 1 }, { unique: true, sparse: true })
+donationSchema.index({ paymentId: 1 }, { unique: true, sparse: true })
 
 export default mongoose.models.Donation || mongoose.model('Donation', donationSchema)
