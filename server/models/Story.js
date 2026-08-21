@@ -12,4 +12,6 @@ const storySchema = new mongoose.Schema({
   publishedAt: { type: Date, default: null }
 }, { timestamps: true })
 
+storySchema.index({ status: 1, publishedAt: -1 })
+
 export default mongoose.models.Story || mongoose.model('Story', storySchema)
