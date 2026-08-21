@@ -23,5 +23,8 @@ const donationSchema = new mongoose.Schema(
 
 donationSchema.index({ orderId: 1 }, { unique: true, sparse: true })
 donationSchema.index({ paymentId: 1 }, { unique: true, sparse: true })
+donationSchema.index({ status: 1, paidAt: -1 })
+donationSchema.index({ email: 1, status: 1, paidAt: -1 })
+donationSchema.index({ status: 1, destination: 1, campaignSlug: 1 })
 
 export default mongoose.models.Donation || mongoose.model('Donation', donationSchema)
