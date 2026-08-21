@@ -24,11 +24,11 @@ dotenv.config()
 const app = express()
 const PORT = Number(process.env.PORT || 5000)
 const isProduction = process.env.NODE_ENV === 'production'
+const isVercel = Boolean(process.env.VERCEL)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const distPath = path.resolve(__dirname, '../dist')
 
-// Production deployments sync indexes explicitly with `npm run db:indexes`.
 mongoose.set('autoIndex', !isProduction)
 
 const requiredProductionEnv = [
@@ -44,16 +44,29 @@ const requiredProductionEnv = [
   'CLOUDINARY_API_SECRET',
 ]
 
-if (isProduction) {
+function getRuntimeConfigError() {
+  if (!isProduction) return ''
   const missing = requiredProductionEnv.filter((name) => !String(process.env[name] || '').trim())
-  if (missing.length) {
-    console.error(`Missing required production environment variables: ${missing.join(', ')}`)
-    process.exit(1)
+  if (missing.length) return `Missing required production environment variables: ${missing.join(', ')}`
+  if (String(process.env.JWT_SECRET).length < 32) return 'JWT_SECRET must be at least 32 characters in production.'
+  return ''
+}
+
+let connectionPromise = null
+async function ensureDatabaseConnection() {
+  if (mongoose.connection.readyState === 1) return mongoose.connection
+  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not configured.')
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      maxPoolSize: isVercel ? 5 : 10,
+    }).catch((error) => {
+      connectionPromise = null
+      throw error
+    })
   }
-  if (String(process.env.JWT_SECRET).length < 32) {
-    console.error('JWT_SECRET must be at least 32 characters in production.')
-    process.exit(1)
-  }
+  await connectionPromise
+  return mongoose.connection
 }
 
 app.disable('x-powered-by')
@@ -95,6 +108,21 @@ const adminAuthLimiter = rateLimit({
   message: { success: false, message: 'Too many authentication attempts. Please try again later.' },
 })
 
+app.use('/api', async (_req, res, next) => {
+  const configError = getRuntimeConfigError()
+  if (configError) {
+    console.error(configError)
+    return res.status(503).json({ success: false, message: 'Production configuration is incomplete.' })
+  }
+  try {
+    await ensureDatabaseConnection()
+    next()
+  } catch (error) {
+    console.error('MongoDB connection failed:', error.message)
+    res.status(503).json({ success: false, message: 'Database is temporarily unavailable.' })
+  }
+})
+
 app.use('/api', apiLimiter)
 app.use('/api/admin/login', adminAuthLimiter)
 app.use('/api/admin/forgot-password', adminAuthLimiter)
@@ -110,7 +138,7 @@ app.get('/api/health', (_req, res) => {
     success: dbReady,
     service: 'RB Charity Foundation API',
     database: dbReady ? 'connected' : 'unavailable',
-    uptimeSeconds: Math.round(process.uptime()),
+    runtime: isVercel ? 'vercel' : 'node',
   })
 })
 
@@ -126,7 +154,7 @@ app.use('/api/contact', contactRoutes)
 
 app.use('/api', (_req, res) => res.status(404).json({ success: false, message: 'API route not found.' }))
 
-if (isProduction) {
+if (isProduction && !isVercel) {
   app.use(express.static(distPath, {
     index: false,
     maxAge: '1y',
@@ -151,14 +179,16 @@ app.use((error, _req, res, _next) => {
 
 let server
 async function startServer() {
-  if (!process.env.MONGODB_URI) {
-    if (isProduction) throw new Error('MONGODB_URI is required in production.')
-    console.warn('MONGODB_URI is not configured. API is running without a database connection.')
-  } else {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
-    })
+  const configError = getRuntimeConfigError()
+  if (configError) throw new Error(configError)
+
+  if (process.env.MONGODB_URI) {
+    await ensureDatabaseConnection()
     console.log('MongoDB connected')
+  } else if (isProduction) {
+    throw new Error('MONGODB_URI is required in production.')
+  } else {
+    console.warn('MONGODB_URI is not configured. API is running without a database connection.')
   }
 
   server = app.listen(PORT, () => console.log(`RB Charity API running on port ${PORT}`))
@@ -171,18 +201,22 @@ async function shutdown(signal) {
   process.exit(0)
 }
 
-process.on('SIGTERM', () => void shutdown('SIGTERM'))
-process.on('SIGINT', () => void shutdown('SIGINT'))
-process.on('unhandledRejection', (error) => {
-  console.error('Unhandled promise rejection:', error)
-  if (isProduction) process.exit(1)
-})
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error)
-  process.exit(1)
-})
+if (!isVercel) {
+  process.on('SIGTERM', () => void shutdown('SIGTERM'))
+  process.on('SIGINT', () => void shutdown('SIGINT'))
+  process.on('unhandledRejection', (error) => {
+    console.error('Unhandled promise rejection:', error)
+    if (isProduction) process.exit(1)
+  })
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception:', error)
+    process.exit(1)
+  })
 
-startServer().catch((error) => {
-  console.error('Server startup failed:', error.message)
-  process.exit(1)
-})
+  startServer().catch((error) => {
+    console.error('Server startup failed:', error.message)
+    process.exit(1)
+  })
+}
+
+export default app
