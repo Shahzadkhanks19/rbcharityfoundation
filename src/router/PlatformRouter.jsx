@@ -1,9 +1,10 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import HomePage from '../App'
 import SiteLayout from '../components/SiteLayout'
-import { AdminDashboardPage, AdminForgotPasswordPage, AdminGuard, AdminLoginPage, AdminResetPasswordPage, AdminResourcePage } from '../pages/AdminPages'
+import { AdminDashboardPage, AdminForgotPasswordPage, AdminGuard, AdminLoginPage, AdminResetPasswordPage } from '../pages/AdminPages'
 import AdminCmsPage from '../pages/AdminCmsPages'
 import AdminDataPage from '../pages/AdminDataPages'
+import { AdminActivityPage, AdminSettingsPage } from '../pages/AdminSystemPages'
 import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
 import CauseDetailsPage from '../pages/CauseDetailsPage'
@@ -20,7 +21,6 @@ import { ErrorPage, NotFoundPage } from '../pages/SystemPages'
 const withPublicLayout = element => <SiteLayout>{element}</SiteLayout>
 const cmsResources = ['campaigns','causes','stories','gallery']
 const detailedDataResources = ['donations','donors','volunteers','partners','messages','reports']
-const simpleDataResources = ['settings','activity']
 
 export default function PlatformRouter() {
   return (
@@ -64,7 +64,8 @@ export default function PlatformRouter() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           {cmsResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminCmsPage resource={resource} />} />)}
           {detailedDataResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminDataPage resource={resource} />} />)}
-          {simpleDataResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminResourcePage resource={resource} />} />)}
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
+          <Route path="/admin/activity" element={<AdminActivityPage />} />
         </Route>
 
         <Route path="/404" element={withPublicLayout(<NotFoundPage />)} />
