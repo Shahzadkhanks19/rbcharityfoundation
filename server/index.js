@@ -9,6 +9,7 @@ import contactRoutes from './routes/contact.js'
 import donationRoutes from './routes/donations.js'
 import donorAuthRoutes from './routes/donorAuth.js'
 import partnerRoutes from './routes/partners.js'
+import publicContentRoutes from './routes/publicContent.js'
 import volunteerRoutes from './routes/volunteers.js'
 
 dotenv.config()
@@ -18,6 +19,7 @@ app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
 app.use(express.json({ limit: '1mb' }))
 app.get('/api/health', (_req, res) => res.json({ success: true, service: 'RB Charity Foundation API' }))
 app.use('/api/admin', adminRoutes)
+app.use('/api/public', publicContentRoutes)
 app.use('/api/causes', causeRoutes)
 app.use('/api/campaigns', campaignRoutes)
 app.use('/api/donations', donationRoutes)
