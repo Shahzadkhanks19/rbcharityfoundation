@@ -12,5 +12,6 @@ const donorSchema = new mongoose.Schema({
 
 donorSchema.index({ email: 1 }, { unique: true, sparse: true })
 donorSchema.index({ phone: 1 }, { sparse: true })
+donorSchema.index({ status: 1, lastDonationAt: -1 })
 
 export default mongoose.models.Donor || mongoose.model('Donor', donorSchema)
