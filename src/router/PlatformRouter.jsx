@@ -17,8 +17,8 @@ import { AboutPage, DonationSuccessPage, FAQPage, LegalPage } from '../pages/Pub
 import { ErrorPage, NotFoundPage } from '../pages/SystemPages'
 
 const withPublicLayout = element => <SiteLayout>{element}</SiteLayout>
-const cmsResources = ['campaigns','causes','stories','gallery','reports']
-const dataResources = ['donations','donors','volunteers','partners','messages','settings','activity']
+const cmsResources = ['campaigns','causes','stories','gallery']
+const dataResources = ['donations','donors','volunteers','partners','messages','reports','settings','activity']
 
 export default function PlatformRouter() {
   return (
