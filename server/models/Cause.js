@@ -10,4 +10,6 @@ const causeSchema = new mongoose.Schema({
   order: { type: Number, default: 0 }
 }, { timestamps: true })
 
+causeSchema.index({ status: 1, order: 1 })
+
 export default mongoose.models.Cause || mongoose.model('Cause', causeSchema)
