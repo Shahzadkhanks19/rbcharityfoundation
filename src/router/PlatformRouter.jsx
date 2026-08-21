@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import HomePage from '../App'
 import SiteLayout from '../components/SiteLayout'
 import { AdminDashboardPage, AdminForgotPasswordPage, AdminGuard, AdminLoginPage, AdminResetPasswordPage, AdminResourcePage } from '../pages/AdminPages'
+import AdminCmsPage from '../pages/AdminCmsPages'
 import CampaignDetailsPage from '../pages/CampaignDetailsPage'
 import CampaignsPage from '../pages/CampaignsPage'
 import CauseDetailsPage from '../pages/CauseDetailsPage'
@@ -16,6 +17,8 @@ import { AboutPage, DonationSuccessPage, FAQPage, LegalPage } from '../pages/Pub
 import { ErrorPage, NotFoundPage } from '../pages/SystemPages'
 
 const withPublicLayout = element => <SiteLayout>{element}</SiteLayout>
+const cmsResources = ['campaigns','causes','stories','gallery','reports']
+const dataResources = ['donations','donors','volunteers','partners','messages','settings','activity']
 
 export default function PlatformRouter() {
   return (
@@ -57,9 +60,8 @@ export default function PlatformRouter() {
         <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
         <Route element={<AdminGuard />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          {['campaigns','causes','donations','donors','volunteers','partners','stories','messages','gallery','reports','settings','activity'].map(resource => (
-            <Route key={resource} path={`/admin/${resource}`} element={<AdminResourcePage resource={resource} />} />
-          ))}
+          {cmsResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminCmsPage resource={resource} />} />)}
+          {dataResources.map(resource => <Route key={resource} path={`/admin/${resource}`} element={<AdminResourcePage resource={resource} />} />)}
         </Route>
 
         <Route path="/404" element={withPublicLayout(<NotFoundPage />)} />
