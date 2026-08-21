@@ -13,14 +13,13 @@ import FoundationSetting from '../models/FoundationSetting.js'
 import GalleryItem from '../models/GalleryItem.js'
 import Partner from '../models/Partner.js'
 import Report from '../models/Report.js'
-import SiteContent from '../models/SiteContent.js'
 import Story from '../models/Story.js'
 import Volunteer from '../models/Volunteer.js'
 import { requireAdmin } from '../middleware/adminAuth.js'
 
 const router = express.Router()
-const models={causes:Cause,campaigns:Campaign,donations:Donation,donors:Donor,volunteers:Volunteer,partners:Partner,stories:Story,messages:ContactMessage,gallery:GalleryItem,reports:Report,content:SiteContent,settings:FoundationSetting,activity:ActivityLog}
-const creatable=['causes','campaigns','stories','gallery','reports','content','settings']
+const models={causes:Cause,campaigns:Campaign,donations:Donation,donors:Donor,volunteers:Volunteer,partners:Partner,stories:Story,messages:ContactMessage,gallery:GalleryItem,reports:Report,settings:FoundationSetting,activity:ActivityLog}
+const creatable=['causes','campaigns','stories','gallery','reports','settings']
 const allowedStatuses={donors:['active','blocked','deleted'],volunteers:['new','reviewing','approved','assigned','inactive'],partners:['new','contacted','proposal','active','closed'],messages:['new','read','replied','archived'],causes:['draft','published','archived'],campaigns:['draft','active','completed','paused','archived'],stories:['draft','published','archived'],gallery:['draft','published','archived'],reports:['draft','published','archived']}
 const log=async(req,action,resource,id='',details='')=>{try{await ActivityLog.create({actor:req.admin?.email||'admin',action,resource,resourceId:String(id||''),details})}catch{}}
 const normalizeEmail=value=>String(value||'').trim().toLowerCase()
