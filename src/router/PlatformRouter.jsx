@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import SiteLayout from '../components/SiteLayout'
+import PublicMetadata from '../components/PublicMetadata'
 import { PageSkeleton } from '../components/system/SystemUI'
 
 const lazyNamed = (loader, name) => lazy(() => loader().then(module => ({ default: module[name] })))
@@ -56,6 +57,7 @@ const engagementResources = ['volunteers', 'partners', 'messages']
 export default function PlatformRouter() {
   return (
     <BrowserRouter>
+      <PublicMetadata />
       <Routes>
         <Route path="/" element={<Suspended><HomePage /></Suspended>} />
         <Route path="/about" element={<PublicRoute><AboutPage /></PublicRoute>} />
