@@ -1,101 +1,26 @@
-import { Edit3, FileText, ImageIcon, Loader2, LogOut, Menu, Plus, Save, Trash2, UploadCloud, Video, X } from 'lucide-react'
+import { Edit3, FileText, ImageIcon, Loader2, Plus, Save, Trash2, UploadCloud, Video, X } from 'lucide-react'
 import { useEffect, useId, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import AdminShell from '../components/admin/AdminShell'
 import CustomSelect from '../components/form/CustomSelect'
 import { PageSkeleton } from '../components/system/SystemUI'
 
 const API = '/api/admin'
 const input = 'w-full rounded-2xl border border-rb-100 bg-white px-4 py-3.5 text-rb-900 outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10'
 const textarea = `${input} min-h-28 resize-y`
-const getToken = () => sessionStorage.getItem('rbAdminToken') || ''
-const clearToken = () => {
-  sessionStorage.removeItem('rbAdminToken')
-  localStorage.removeItem('rbAdminToken')
-}
 
 async function request(path, options = {}) {
-  const token = getToken()
   const res = await fetch(`${API}${path}`, {
     ...options,
+    credentials: 'same-origin',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {})
     }
   })
-  const data = await res.json()
+  const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.message || 'Request failed')
   return data
-}
-
-const nav = [
-  ['Dashboard', '/admin/dashboard'], ['Campaigns', '/admin/campaigns'], ['Causes', '/admin/causes'],
-  ['Donations', '/admin/donations'], ['Donors', '/admin/donors'], ['Volunteers', '/admin/volunteers'],
-  ['Partners', '/admin/partners'], ['Stories', '/admin/stories'], ['Messages', '/admin/messages'],
-  ['Gallery', '/admin/gallery'], ['Reports', '/admin/reports'], ['Settings', '/admin/settings'], ['Activity', '/admin/activity']
-]
-
-function Shell({ children }) {
-  const loc = useLocation()
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => setOpen(false), [loc.pathname])
-
-  const logout = () => {
-    clearToken()
-    navigate('/admin/login', { replace: true })
-  }
-
-  const links = nav.map(([label, path]) => (
-    <Link key={path} to={path} className={`block rounded-2xl px-4 py-3 text-sm font-bold transition ${loc.pathname === path ? 'bg-gold text-rb-900 shadow-sm' : 'text-white/65 hover:bg-white/10 hover:text-white'}`}>
-      {label}
-    </Link>
-  ))
-
-  return (
-    <div className="min-h-screen overflow-x-hidden bg-rb-50 text-rb-900">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-rb-900 text-white xl:flex">
-        <div className="border-b border-white/10 px-6 py-6">
-          <Link to="/admin/dashboard" className="text-lg font-black">RB CHARITY</Link>
-          <p className="mt-1 text-xs font-bold uppercase tracking-[.18em] text-white/40">Admin panel</p>
-        </div>
-        <nav className="flex-1 overflow-y-auto p-3">{links}</nav>
-        <div className="border-t border-white/10 p-3">
-          <button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-white/70 hover:bg-white/10">
-            <LogOut size={17} /> Logout
-          </button>
-        </div>
-      </aside>
-
-      <div className="min-h-screen min-w-0 xl:pl-64">
-        <header className="sticky top-0 z-30 border-b border-rb-100 bg-white/95 backdrop-blur">
-          <div className="flex min-h-[72px] items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-            <div className="flex min-w-0 items-center gap-3">
-              <button type="button" onClick={() => setOpen(true)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rb-50 xl:hidden" aria-label="Open navigation"><Menu size={21} /></button>
-              <div className="min-w-0"><p className="truncate font-black">RB Charity Admin</p><p className="hidden text-xs text-slate-400 sm:block">Foundation management console</p></div>
-            </div>
-            <button type="button" onClick={logout} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-rb-900 px-3 py-2 text-xs font-black text-white sm:px-4 sm:text-sm"><LogOut size={15} /><span className="hidden sm:inline">Logout</span></button>
-          </div>
-        </header>
-        <main className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</main>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 xl:hidden">
-          <button type="button" onClick={() => setOpen(false)} className="absolute inset-0 bg-rb-900/55 backdrop-blur-sm" aria-label="Close navigation" />
-          <aside className="absolute inset-y-0 left-0 flex w-[min(86vw,320px)] flex-col bg-rb-900 text-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 p-5">
-              <div><p className="font-black">RB CHARITY</p><p className="text-xs uppercase tracking-[.16em] text-white/40">Admin panel</p></div>
-              <button type="button" onClick={() => setOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-white/10" aria-label="Close navigation"><X size={20} /></button>
-            </div>
-            <nav className="flex-1 overflow-y-auto p-3">{links}</nav>
-            <div className="border-t border-white/10 p-3"><button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 font-bold text-white/70"><LogOut size={17} /> Logout</button></div>
-          </aside>
-        </div>
-      )}
-    </div>
-  )
 }
 
 const configs = {
@@ -158,7 +83,7 @@ export default function AdminCmsPage({ resource }) {
   if (!config) return null
 
   return (
-    <Shell>
+    <AdminShell>
       {state.loading ? <PageSkeleton cards={5} /> : (
         <>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -201,7 +126,7 @@ export default function AdminCmsPage({ resource }) {
           {remove && <ConfirmModal title={remove[config.primary]} onCancel={() => setRemove(null)} onConfirm={confirmDelete} />}
         </>
       )}
-    </Shell>
+    </AdminShell>
   )
 }
 
@@ -268,18 +193,7 @@ function EditorModal({ resource, config, mode, item, onClose, onSaved }) {
 
         <form onSubmit={submit} className="mt-6 grid gap-4 sm:grid-cols-2">
           {config.fields.map(([key, label, type]) => (
-            <Field
-              key={key}
-              fieldKey={key}
-              label={label}
-              type={type}
-              value={form[key]}
-              statuses={config.statuses}
-              mediaType={form.mediaType || 'image'}
-              causeOptions={causeState.options}
-              causeLoading={causeState.loading}
-              onChange={value => setForm(current => ({ ...current, [key]: value }))}
-            />
+            <Field key={key} fieldKey={key} label={label} type={type} value={form[key]} statuses={config.statuses} mediaType={form.mediaType || 'image'} causeOptions={causeState.options} causeLoading={causeState.loading} onChange={value => setForm(current => ({ ...current, [key]: value }))} />
           ))}
 
           {causeState.error && <p className="rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-800 sm:col-span-2">Unable to load causes: {causeState.error}</p>}
@@ -296,14 +210,12 @@ function EditorModal({ resource, config, mode, item, onClose, onSaved }) {
 
 function Field({ fieldKey, label, type, value, statuses, mediaType, causeOptions = [], causeLoading = false, onChange }) {
   const wide = ['summary', 'description', 'content', 'caption', 'mediaUrl', 'coverImage', 'image'].includes(fieldKey)
-
   if (type === 'textarea') return <label className={`block min-w-0 ${wide ? 'sm:col-span-2' : ''}`}><span className="mb-2 block text-sm font-black">{label}</span><textarea className={textarea} value={value || ''} onChange={event => onChange(event.target.value)} /></label>
   if (type === 'status') return <label className="block min-w-0"><span className="mb-2 block text-sm font-black">{label}</span><CustomSelect value={value || statuses[0]} onChange={onChange} options={statuses.map(option => ({ value: option, label: option }))} /></label>
   if (type === 'cause') return <label className="block min-w-0"><span className="mb-2 block text-sm font-black">{label}</span><CustomSelect value={value || ''} onChange={onChange} disabled={causeLoading} placeholder={causeLoading ? 'Loading causes…' : causeOptions.length ? 'Select a cause' : 'No published causes'} options={[{ value: '', label: 'No cause linked' }, ...causeOptions]} /></label>
   if (type === 'mediaType') return <label className="block min-w-0"><span className="mb-2 block text-sm font-black">{label}</span><CustomSelect value={value || 'image'} onChange={onChange} options={[{ value: 'image', label: 'Image' }, { value: 'video', label: 'Video' }]} /></label>
-  if (type === 'boolean') return <label className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-rb-100 bg-rb-50 px-4 py-3.5"><span className="font-black">{label}</span><button type="button" onClick={() => onChange(!value)} className={`relative h-7 w-12 shrink-0 rounded-full transition ${value ? 'bg-rb-900' : 'bg-slate-300'}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${value ? 'left-6' : 'left-1'}`} /></button></label>
+  if (type === 'boolean') return <label className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-rb-100 bg-rb-50 px-4 py-3.5"><span className="font-black">{label}</span><button type="button" onClick={() => onChange(!value)} className={`relative h-7 w-12 shrink-0 rounded-full transition ${value ? 'bg-rb-900' : 'bg-slate-300'}`} aria-pressed={Boolean(value)}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${value ? 'left-6' : 'left-1'}`} /></button></label>
   if (type === 'mediaImage' || type === 'media') return <MediaField label={label} value={value} mediaType={type === 'mediaImage' ? 'image' : mediaType} onChange={onChange} />
-
   const inputType = ['startsAt', 'endsAt', 'publishedAt'].includes(fieldKey) ? 'date' : 'text'
   return <label className={`block min-w-0 ${wide ? 'sm:col-span-2' : ''}`}><span className="mb-2 block text-sm font-black">{label}</span><input className={input} type={inputType} value={value ?? ''} onChange={event => onChange(event.target.value)} /></label>
 }
@@ -319,16 +231,9 @@ function MediaField({ label, value, mediaType, onChange }) {
     if (!file) return
     const isVideo = mediaType === 'video'
     const validType = isVideo ? file.type.startsWith('video/') : file.type.startsWith('image/')
-    if (!validType) {
-      setError(`Please choose a valid ${isVideo ? 'video' : 'image'} file.`)
-      return
-    }
-
+    if (!validType) { setError(`Please choose a valid ${isVideo ? 'video' : 'image'} file.`); return }
     const maxBytes = isVideo ? 100 * 1024 * 1024 : 12 * 1024 * 1024
-    if (file.size > maxBytes) {
-      setError(`${isVideo ? 'Video' : 'Image'} must be smaller than ${isVideo ? '100 MB' : '12 MB'}.`)
-      return
-    }
+    if (file.size > maxBytes) { setError(`${isVideo ? 'Video' : 'Image'} must be smaller than ${isVideo ? '100 MB' : '12 MB'}.`); return }
 
     setUploading(true)
     setError('')
@@ -340,49 +245,30 @@ function MediaField({ label, value, mediaType, onChange }) {
       formData.append('timestamp', String(signed.timestamp))
       formData.append('signature', signed.signature)
       formData.append('folder', signed.folder)
-
       const response = await fetch(signed.uploadUrl, { method: 'POST', body: formData })
       const result = await response.json()
       if (!response.ok || !result.secure_url) throw new Error(result?.error?.message || 'Media upload failed.')
       onChange(result.secure_url)
     } catch (uploadError) {
       setError(uploadError.message || 'Media upload failed.')
-    } finally {
-      setUploading(false)
-    }
+    } finally { setUploading(false) }
   }
 
-  return (
-    <div className="min-w-0 sm:col-span-2">
-      <span className="mb-2 block text-sm font-black">{label}</span>
-      <div className="overflow-hidden rounded-2xl border border-rb-100 bg-rb-50/40">
-        {value && (
-          <div className="border-b border-rb-100 bg-white p-3">
-            {mediaType === 'video' ? (
-              <video src={value} controls preload="metadata" className="max-h-64 w-full rounded-xl bg-black object-contain" />
-            ) : (
-              <img src={value} alt={`${label} preview`} className="max-h-64 w-full rounded-xl object-contain" />
-            )}
-          </div>
-        )}
-        <div className="p-4">
-          <input id={fileId} type="file" accept={accept} className="hidden" onChange={event => { upload(event.target.files?.[0]); event.target.value = '' }} />
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <label htmlFor={fileId} className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-rb-900 px-4 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 ${uploading ? 'pointer-events-none opacity-60' : ''}`}>
-              {uploading ? <Loader2 size={17} className="animate-spin" /> : <UploadCloud size={17} />}
-              {uploading ? 'Uploading…' : `Upload ${mediaType === 'video' ? 'video' : 'image'}`}
-            </label>
-            <p className="text-xs leading-5 text-slate-500">{mediaType === 'video' ? 'Video up to 100 MB.' : 'Image up to 12 MB.'} Stored securely in Cloudinary.</p>
-          </div>
-          <div className="mt-3">
-            <label className="text-xs font-black uppercase tracking-[.12em] text-slate-400">Or paste media URL</label>
-            <input className={`${input} mt-2`} type="url" value={value || ''} onChange={event => onChange(event.target.value)} placeholder="https://..." />
-          </div>
-          {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p>}
+  return <div className="min-w-0 sm:col-span-2">
+    <span className="mb-2 block text-sm font-black">{label}</span>
+    <div className="overflow-hidden rounded-2xl border border-rb-100 bg-rb-50/40">
+      {value && <div className="border-b border-rb-100 bg-white p-3">{mediaType === 'video' ? <video src={value} controls preload="metadata" className="max-h-64 w-full rounded-xl bg-black object-contain" /> : <img src={value} alt={`${label} preview`} loading="lazy" decoding="async" className="max-h-64 w-full rounded-xl object-contain" />}</div>}
+      <div className="p-4">
+        <input id={fileId} type="file" accept={accept} className="hidden" onChange={event => { upload(event.target.files?.[0]); event.target.value = '' }} />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label htmlFor={fileId} className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-rb-900 px-4 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 ${uploading ? 'pointer-events-none opacity-60' : ''}`}>{uploading ? <Loader2 size={17} className="animate-spin" /> : <UploadCloud size={17} />}{uploading ? 'Uploading…' : `Upload ${mediaType === 'video' ? 'video' : 'image'}`}</label>
+          <p className="text-xs leading-5 text-slate-500">{mediaType === 'video' ? 'Video up to 100 MB.' : 'Image up to 12 MB.'} Stored securely in Cloudinary.</p>
         </div>
+        <div className="mt-3"><label className="text-xs font-black uppercase tracking-[.12em] text-slate-400">Or paste media URL</label><input className={`${input} mt-2`} type="url" value={value || ''} onChange={event => onChange(event.target.value)} placeholder="https://..." /></div>
+        {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p>}
       </div>
     </div>
-  )
+  </div>
 }
 
 function formatInitial(key, value) {
@@ -395,16 +281,5 @@ function formatInitial(key, value) {
 }
 
 function ConfirmModal({ title, onCancel, onConfirm }) {
-  return (
-    <div className="fixed inset-0 z-[110] grid place-items-center bg-rb-900/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-[2rem] bg-white p-5 shadow-2xl sm:p-6">
-        <h2 className="text-2xl font-black">Delete this item?</h2>
-        <p className="mt-3 break-words leading-7 text-slate-600">“{title}” will be permanently removed.</p>
-        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <button type="button" onClick={onCancel} className="w-full rounded-full bg-rb-50 px-5 py-3 font-black sm:w-auto">Cancel</button>
-          <button type="button" onClick={onConfirm} className="w-full rounded-full bg-red-600 px-5 py-3 font-black text-white sm:w-auto">Delete</button>
-        </div>
-      </div>
-    </div>
-  )
+  return <div className="fixed inset-0 z-[110] grid place-items-center bg-rb-900/70 p-4 backdrop-blur-sm"><div className="w-full max-w-md rounded-[2rem] bg-white p-5 shadow-2xl sm:p-6"><h2 className="text-2xl font-black">Delete this item?</h2><p className="mt-3 break-words leading-7 text-slate-600">“{title}” will be permanently removed.</p><div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" onClick={onCancel} className="w-full rounded-full bg-rb-50 px-5 py-3 font-black sm:w-auto">Cancel</button><button type="button" onClick={onConfirm} className="w-full rounded-full bg-red-600 px-5 py-3 font-black text-white sm:w-auto">Delete</button></div></div></div>
 }
