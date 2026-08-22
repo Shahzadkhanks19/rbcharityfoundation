@@ -8,6 +8,7 @@ import GalleryItem from '../models/GalleryItem.js'
 import Report from '../models/Report.js'
 import Story from '../models/Story.js'
 import Volunteer from '../models/Volunteer.js'
+import { optimizedPublicImage } from '../utils/publicMedia.js'
 
 const router = express.Router()
 
@@ -44,7 +45,12 @@ router.get('/impact-summary', async (_req, res) => {
 
 router.get('/gallery', async (_req, res) => {
   const items = await GalleryItem.find({ status: 'published' }).sort({ createdAt: -1 }).lean()
-  res.json({ success: true, items })
+  res.json({
+    success: true,
+    items: items.map(item => item.mediaType === 'video'
+      ? item
+      : { ...item, mediaUrl: optimizedPublicImage(item.mediaUrl || item.image, 960), image: optimizedPublicImage(item.image || item.mediaUrl, 960) })
+  })
 })
 
 router.get('/reports', async (_req, res) => {
@@ -54,13 +60,13 @@ router.get('/reports', async (_req, res) => {
 
 router.get('/stories', async (_req, res) => {
   const items = await Story.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).lean()
-  res.json({ success: true, items })
+  res.json({ success: true, items: items.map(item => ({ ...item, coverImage: optimizedPublicImage(item.coverImage, 900) })) })
 })
 
 router.get('/stories/:slug', async (req, res) => {
   const item = await Story.findOne({ slug: req.params.slug, status: 'published' }).lean()
   if (!item) return res.status(404).json({ success: false, message: 'Story not found.' })
-  res.json({ success: true, item })
+  res.json({ success: true, item: { ...item, coverImage: optimizedPublicImage(item.coverImage, 1600) } })
 })
 
 export default router
