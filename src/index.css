@@ -12,3 +12,54 @@
   --color-gold: #f2a23a;
   --shadow-soft: 0 20px 60px rgba(24, 58, 97, 0.14);
 }
+
+html {
+  background: #f7fafc;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+/*
+ * Let the browser skip paint/layout work for off-screen editorial sections.
+ * The intrinsic fallback keeps scroll geometry stable until a section approaches
+ * the viewport, which improves initial rendering on media-heavy public pages.
+ */
+@supports (content-visibility: auto) {
+  section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
+  }
+}
+
+/* A consistent, high-visibility keyboard focus fallback for native controls. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid rgba(242, 162, 58, 0.72);
+  outline-offset: 3px;
+}
+
+/* Respect operating-system motion preferences across all public/admin UI. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
