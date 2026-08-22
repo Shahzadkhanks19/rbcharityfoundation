@@ -23,6 +23,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/image",
+      "destination": "/api/image"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/[...path]"
     },
