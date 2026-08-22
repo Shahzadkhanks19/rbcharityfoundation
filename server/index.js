@@ -31,14 +31,13 @@ const distPath = path.resolve(__dirname, '../dist')
 
 mongoose.set('autoIndex', !isProduction)
 
+// Only core services required for the application itself are mandatory.
+// Optional integrations (Razorpay / Resend) degrade gracefully at their own endpoints.
 const requiredProductionEnv = [
   'MONGODB_URI',
   'JWT_SECRET',
   'ADMIN_EMAIL',
   'ADMIN_PASSWORD',
-  'RAZORPAY_KEY_ID',
-  'RAZORPAY_KEY_SECRET',
-  'RAZORPAY_WEBHOOK_SECRET',
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
   'CLOUDINARY_API_SECRET',
@@ -136,11 +135,21 @@ app.use(express.json({ limit: '1mb' }))
 
 app.get('/api/health', (_req, res) => {
   const dbReady = mongoose.connection.readyState === 1
+  const paymentsConfigured = Boolean(
+    process.env.RAZORPAY_KEY_ID &&
+    process.env.RAZORPAY_KEY_SECRET &&
+    process.env.RAZORPAY_WEBHOOK_SECRET
+  )
   res.status(dbReady ? 200 : 503).json({
     success: dbReady,
     service: 'RB Charity Foundation API',
     database: dbReady ? 'connected' : 'unavailable',
     runtime: isVercel ? 'vercel' : 'node',
+    integrations: {
+      payments: paymentsConfigured ? 'configured' : 'not-configured',
+      email: process.env.RESEND_API_KEY && process.env.ADMIN_FROM_EMAIL ? 'configured' : 'not-configured',
+      media: process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET ? 'configured' : 'not-configured',
+    },
   })
 })
 
